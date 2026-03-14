@@ -1,0 +1,62 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.python-version
+venv
+env
+ENV
+env.bak
+venv.bak
+
+# Database
+*.db
+*.sqlite3
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+Makefile
+
+# Environment
+.env
+.env.*
+!.env.docker
+
+# Tests
+tests/
+*.test.py
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Distributions
+build/
+dist/
+*.egg-info/
+*.egg

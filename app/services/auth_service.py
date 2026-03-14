@@ -1,0 +1,176 @@
+from sqlalchemy.orm import Session
+from fastapi import HTTPException, status
+from typing import Optional
+
+from app.repositories.user_repository import UserRepository
+from app.schemas.user import UserCreate, UserLogin, UserUpdate, UserBlock, PasswordChange
+from app.core.security import verify_password, get_password_hash, create_access_token
+from app.models.user import User
+
+
+class AuthService:
+    def __init__(self, db: Session):
+        self.db = db
+        self.user_repo = UserRepository(db)
+
+    def register(self, user_data: UserCreate) -> User:
+        existing_user = self.user_repo.get_by_email(user_data.email)
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User with this email already exists"
+            )
+
+        hashed_password = get_password_hash(user_data.password)
+        user = self.user_repo.create(user_data, hashed_password)
+
+        return user
+
+    def login(self, login_data: UserLogin) -> dict:
+        user = self.user_repo.get_by_email(login_data.email)
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password"
+            )
+
+        if user.is_deleted:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Account has been deleted"
+            )
+
+        if user.is_blocked:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Account is blocked. Reason: {user.blocked_comment or 'No reason provided'}"
+            )
+
+        if not verify_password(login_data.password, user.password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password"
+            )
+
+        access_token = create_access_token(
+            subject=user.id,
+            role=user.role.value
+        )
+
+        return {
+            "access_token": access_token,
+            "token_type": "bearer"
+        }
+
+    def get_current_user(self, user_id: str) -> User:
+        user = self.user_repo.get_by_id(user_id)
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        if user.is_deleted:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Account has been deleted"
+            )
+
+        return user
+
+    def update_profile(self, user_id: str, update_data: UserUpdate) -> User:
+        user = self.get_current_user(user_id)
+
+        # Check if email is being changed and if it's already taken
+        if update_data.email and update_data.email != user.email:
+            existing_user = self.user_repo.get_by_email(update_data.email)
+            if existing_user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Email already in use"
+                )
+
+        return self.user_repo.update(user, update_data)
+
+    def change_password(self, user_id: str, password_data: PasswordChange) -> bool:
+        user = self.get_current_user(user_id)
+
+        if not verify_password(password_data.current_password, user.password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Current password is incorrect"
+            )
+
+        hashed_password = get_password_hash(password_data.new_password)
+        self.user_repo.update_password(user, hashed_password)
+
+        return True
+
+    def block_user(self, admin_id: str, target_user_id: str, block_data: UserBlock) -> User:
+        admin = self.get_current_user(admin_id)
+
+        if admin.role != "SUPER_ADMIN":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions"
+            )
+
+        if admin_id == target_user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cannot block a super admin"
+            )
+
+        target_user = self.user_repo.get_by_id(target_user_id)
+        if not target_user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        return self.user_repo.block(target_user, block_data)
+
+    def unblock_user(self, admin_id: str, target_user_id: str) -> User:
+        admin = self.get_current_user(admin_id)
+
+        if admin.role != "SUPER_ADMIN":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions"
+            )
+
+        target_user = self.user_repo.get_by_id(target_user_id)
+        if not target_user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        return self.user_repo.unblock(target_user)
+
+    def delete_user(self, user_id: str, target_user_id: str) -> bool:
+        current_user = self.get_current_user(user_id)
+
+        if user_id == target_user_id and current_user.role == "SUPER_ADMIN":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cannot delete a super admin"
+            )
+
+        if user_id != target_user_id and current_user.role != "SUPER_ADMIN":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions to delete other users"
+            )
+
+        target_user = self.user_repo.get_by_id(target_user_id)
+        if not target_user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        self.user_repo.delete(target_user)
+        return True
