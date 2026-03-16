@@ -1,8 +1,12 @@
+from typing import Optional
+
 from sqlalchemy import Column, String, DateTime, Enum, Date
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 import enum
 
 from app.core.database import Base
+from app.models.gym import Gym, GymApplicationStatus
 
 
 class UserRole(str, enum.Enum):
@@ -28,6 +32,13 @@ class User(Base):
     blocked_comment = Column(String(255), nullable=True)
     deleted_at = Column(DateTime, nullable=True)
 
+    trainer_profile = relationship("Trainer", back_populates="user", uselist=False)
+    gym_application = relationship(
+        "GymApplication", 
+        back_populates="gym_admin", 
+        uselist=False
+    )
+
     def __repr__(self):
         return f"<User {self.email}>"
 
@@ -42,3 +53,16 @@ class User(Base):
     @property
     def is_deleted(self) -> bool:
         return self.deleted_at is not None
+
+    @property
+    def is_trainer(self) -> bool:
+        return self.role == UserRole.TRAINER and self.trainer_profile is not None
+    
+    @property
+    def gym(self) -> Optional[Gym]:
+        if self.role != UserRole.GYM_ADMIN or not self.gym_application:
+            return None
+        
+        if self.gym_application.status == GymApplicationStatus.APPROVED:
+            return self.gym_application.gym
+        return None

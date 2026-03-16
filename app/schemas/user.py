@@ -15,6 +15,9 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8)
+    phone: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = Field(None, min_length=1, max_length=255)
+    gym_id: Optional[str] = Field(None, min_length=1, max_length=36)
 
 
 class UserLogin(BaseModel):

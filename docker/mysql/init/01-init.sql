@@ -281,6 +281,8 @@ ADD FOREIGN KEY(`gym_id`) REFERENCES `gym`(`id`);
 ALTER TABLE `gym_blocking`
 ADD FOREIGN KEY(`user_id`) REFERENCES `user`(`id`);
 
+
+
 INSERT INTO `user` (`id`, `role`, `first_name`, `last_name`, `email`, `password`, `created_at`)
 VALUES (
     '11111111-1111-1111-1111-111111111111',
@@ -291,3 +293,23 @@ VALUES (
     '$2b$12$oTc6Q2sCuJLu0VtqtCL/buMPUDfJiCIqpKYqCmvv/NdjOoVvOKIx2', -- password: Admin123!
     NOW()
 ) ON DUPLICATE KEY UPDATE email=email;
+
+
+-- Тестовые данные
+
+
+INSERT INTO `user` (`id`, `role`, `first_name`, `last_name`, `email`, `password`, `created_at`)
+VALUES (
+    '22222222-2222-2222-2222-222222222222',
+    'GYM_ADMIN',
+    'Gym',
+    'Admin',
+    'gym@example.com',
+    '$2b$12$AXk9hO2d2jDbZA.3H7iUvugHLLo2YDPbilRGLl0EjAuqDN2GW3Nt6', -- password: password
+    NOW()
+) ON DUPLICATE KEY UPDATE email=email;
+
+INSERT INTO `gym_application` (`id`, `title`, `address`, `description`, `phone`, `status`, `comment`, `created_at`, `gym_admin_id`)
+VALUES ('11111111-1111-1111-1111-111111111101', 'Фитнес-центр "Атлант"', 'ул. Ленина, 15, Москва', 'Современный тренажерный зал с кардио-зоной и свободными весами', '+7 (495) 123-45-67', 'APPROVED', NULL, NOW(), '22222222-2222-2222-2222-222222222222');
+INSERT INTO `gym` (`id`, `gym_application_id`, `created_at`, `status`)
+VALUES ('22222222-2222-2222-2222-222222222202', '11111111-1111-1111-1111-111111111101', NOW(), 'ACTIVE');

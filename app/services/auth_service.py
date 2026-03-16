@@ -13,13 +13,27 @@ class AuthService:
         self.db = db
         self.user_repo = UserRepository(db)
 
-    def register(self, user_data: UserCreate) -> User:
+    def register(self, current_user: User, user_data: UserCreate) -> User:
         existing_user = self.user_repo.get_by_email(user_data.email)
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="User with this email already exists"
             )
+        if user_data.role == "SUPER_ADMIN":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User can not register as SUPER_ADMIN by himself"
+            )
+        if user_data.role == "TRAINER":
+            if current_user is not None and current_user.role == "GYM_ADMIN":
+                user_data.gym_id = current_user.gym.id
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User can not register as TRAINER by himself"
+                )
+            
 
         hashed_password = get_password_hash(user_data.password)
         user = self.user_repo.create(user_data, hashed_password)
@@ -83,7 +97,6 @@ class AuthService:
     def update_profile(self, user_id: str, update_data: UserUpdate) -> User:
         user = self.get_current_user(user_id)
 
-        # Check if email is being changed and if it's already taken
         if update_data.email and update_data.email != user.email:
             existing_user = self.user_repo.get_by_email(update_data.email)
             if existing_user:

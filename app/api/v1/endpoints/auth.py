@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -12,14 +14,14 @@ from app.models.user import User
 
 router = APIRouter()
 
-
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(
     user_data: UserCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(dependencies.get_current_user_optional)
 ):
     auth_service = AuthService(db)
-    user = auth_service.register(user_data)
+    user = auth_service.register(current_user, user_data)
     return user
 
 
@@ -74,7 +76,7 @@ async def delete_own_account(
 async def block_user(
     user_id: str,
     block_data: UserBlock,
-    current_user: User = Depends(dependencies.require_admin),
+    current_user: User = Depends(dependencies.require_super_admin),
     db: Session = Depends(get_db)
 ):
     auth_service = AuthService(db)
@@ -84,7 +86,7 @@ async def block_user(
 @router.post("/users/{user_id}/unblock", response_model=UserResponse)
 async def unblock_user(
     user_id: str,
-    current_user: User = Depends(dependencies.require_admin),
+    current_user: User = Depends(dependencies.require_super_admin),
     db: Session = Depends(get_db)
 ):
     auth_service = AuthService(db)
@@ -94,7 +96,7 @@ async def unblock_user(
 @router.delete("/users/{user_id}")
 async def delete_user(
     user_id: str,
-    current_user: User = Depends(dependencies.require_admin),
+    current_user: User = Depends(dependencies.require_super_admin),
     db: Session = Depends(get_db)
 ):
     auth_service = AuthService(db)

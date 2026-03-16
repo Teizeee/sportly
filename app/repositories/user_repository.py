@@ -5,6 +5,7 @@ from typing import Optional, List
 import uuid
 
 from app.models.user import User, UserRole
+from app.models.trainer import Trainer
 from app.schemas.user import UserCreate, UserUpdate, UserBlock
 
 
@@ -24,8 +25,19 @@ class UserRepository:
             role=user_data.role,
             created_at=datetime.utcnow()
         )
-
         self.db.add(user)
+
+        if user_data.role == "TRAINER":
+            trainer = Trainer(
+                id=str(uuid.uuid4()),
+                user_id = user.id,
+                gym_id = user_data.gym_id,
+                phone = user_data.phone,
+                description = user_data.description,
+                password = user_data.password
+            )
+            self.db.add(trainer)
+
         self.db.commit()
         self.db.refresh(user)
         return user

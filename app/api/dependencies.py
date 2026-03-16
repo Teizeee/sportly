@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Header, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from jose import JWTError
@@ -52,6 +52,39 @@ async def get_current_active_user(
     return current_user
 
 
+async def get_current_user_optional(
+        authorization: Optional[str] = Header(None, alias="Authorization"),
+        db: Session = Depends(get_db)
+) -> Optional[User]:
+    if authorization is None:
+        return None
+    
+    try:
+        scheme, token = authorization.split()
+        if scheme.lower() != "bearer":
+            return None
+    except ValueError:
+        return None
+    
+    try:
+        payload = decode_token(token)
+        user_id: str = payload.get("sub")
+        
+        if user_id is None:
+            return None
+            
+        auth_service = AuthService(db)
+        user = auth_service.get_current_user(user_id)
+        
+        if user and user.is_blocked:
+            return None
+            
+        return user
+    except JWTError:
+        return None
+    except Exception:
+        return None
+
 def require_roles(allowed_roles: list[UserRole]):
     async def role_checker(current_user: User = Depends(get_current_active_user)):
         if current_user.role not in allowed_roles:
@@ -64,5 +97,4 @@ def require_roles(allowed_roles: list[UserRole]):
     return role_checker
 
 
-require_admin = require_roles([UserRole.GYM_ADMIN, UserRole.SUPER_ADMIN])
 require_super_admin = require_roles([UserRole.SUPER_ADMIN])
