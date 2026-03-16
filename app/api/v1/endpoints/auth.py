@@ -96,7 +96,7 @@ async def unblock_user(
 @router.delete("/users/{user_id}")
 async def delete_user(
     user_id: str,
-    current_user: User = Depends(dependencies.require_super_admin),
+    current_user: User = Depends(dependencies.require_admin),
     db: Session = Depends(get_db)
 ):
     auth_service = AuthService(db)

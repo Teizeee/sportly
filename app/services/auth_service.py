@@ -172,17 +172,21 @@ class AuthService:
                 detail="Cannot delete a super admin"
             )
 
-        if user_id != target_user_id and current_user.role != "SUPER_ADMIN":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions to delete other users"
-            )
-
         target_user = self.user_repo.get_by_id(target_user_id)
         if not target_user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
+            )
+
+        if current_user.role == "GYM_ADMIN" and target_user.role == "TRAINER" and target_user.trainer_profile.gym_id == current_user.gym.id:
+            self.user_repo.delete(target_user)
+            return True
+
+        if user_id != target_user_id and current_user.role != "SUPER_ADMIN":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions to delete other users"
             )
 
         self.user_repo.delete(target_user)
