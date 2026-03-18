@@ -27,8 +27,6 @@ CREATE TABLE IF NOT EXISTS `gym_blocking` (
 ) COMMENT='блокировка пользователя администратором зала';
 
 
-
-
 CREATE TABLE IF NOT EXISTS `avatar` (
 	`user_id` VARCHAR(36) NOT NULL UNIQUE,
 	`link` VARCHAR(255) NOT NULL,
@@ -138,7 +136,7 @@ CREATE TABLE IF NOT EXISTS `client_membership` (
 );
 
 
-CREATE TABLE trainer_package (
+CREATE TABLE IF NOT EXISTS `trainer_package` (
     `id` VARCHAR(36) PRIMARY KEY,
     `trainer_id` VARCHAR(36) NOT NULL,
     `name` VARCHAR(255) NOT NULL,
@@ -148,7 +146,7 @@ CREATE TABLE trainer_package (
 );
 
 
-CREATE TABLE user_trainer_package (
+CREATE TABLE IF NOT EXISTS `user_trainer_package` (
     `id` VARCHAR(36) PRIMARY KEY,
     `user_id` VARCHAR(36) NOT NULL,
     `trainer_package_id` VARCHAR(36) NOT NULL,

@@ -1,4 +1,4 @@
-from typing import Optional
+from pathlib import Path
 from pydantic_settings import BaseSettings
 from pydantic import ConfigDict
 
@@ -12,10 +12,16 @@ class Settings(BaseSettings):
 
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
 
-    APP_NAME: str = "Auth Service"
+    APP_NAME: str = "Sportly"
     DEBUG: bool = False
+
+    base_storage_path: Path = Path("static")
+    avatar_path: Path = base_storage_path / "avatars"
+    gym_path: Path = base_storage_path / "gyms"
+    max_file_size: int = 5 * 1024 * 1024  # 5 MB
+    allowed_extensions: list = [".jpg", ".jpeg", ".png", ".gif", ".webp"]
 
     @property
     def DATABASE_URL(self) -> str:

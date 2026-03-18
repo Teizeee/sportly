@@ -25,12 +25,18 @@ class UserLogin(BaseModel):
     password: str
 
 
+class AvatarResponse(BaseModel):
+    link: str
+
+
 class UserResponse(UserBase):
     id: str
     created_at: datetime
     blocked_at: Optional[datetime] = None
     blocked_comment: Optional[str] = None
     deleted_at: Optional[datetime] = None
+
+    avatar: Optional[AvatarResponse] = None
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -11,4 +11,7 @@ alembic
 email-validator
 pymysql[rsa]
 cryptography
+aiofiles
+Pillow
+python-multipart
 bcrypt==3.2.0

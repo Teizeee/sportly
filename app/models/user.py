@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import Column, String, DateTime, Enum, Date
+from sqlalchemy import Column, ForeignKey, String, DateTime, Enum, Date
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import enum
@@ -38,6 +38,11 @@ class User(Base):
         back_populates="gym_admin", 
         uselist=False
     )
+    avatar = relationship(
+        "Avatar",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<User {self.email}>"
@@ -66,3 +71,13 @@ class User(Base):
         if self.gym_application.status == GymApplicationStatus.APPROVED:
             return self.gym_application.gym
         return None
+    
+
+class Avatar(Base):
+    __tablename__ = "avatar"
+
+    user_id = Column(String(36), ForeignKey("user.id"), primary_key=True, index=True, unique=True)
+    link = Column(String(255), nullable=False)
+
+    def __repr__(self):
+        return f"<Avatar for user {self.user_id}>"
