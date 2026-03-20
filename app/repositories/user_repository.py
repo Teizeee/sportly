@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 import uuid
 
@@ -23,7 +22,7 @@ class UserRepository:
             patronymic=user_data.patronymic,
             birth_date=user_data.birth_date,
             role=user_data.role,
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         self.db.add(user)
 
@@ -66,7 +65,7 @@ class UserRepository:
         return query.offset(skip).limit(limit).all()
 
     def update(self, user: User, update_data: UserUpdate) -> User:
-        for field, value in update_data.dict(exclude_unset=True).items():
+        for field, value in update_data.model_dump(exclude_unset=True).items():
             setattr(user, field, value)
 
         self.db.commit()
@@ -74,7 +73,7 @@ class UserRepository:
         return user
 
     def block(self, user: User, block_data: UserBlock) -> User:
-        user.blocked_at = datetime.utcnow()
+        user.blocked_at = datetime.now(timezone.utc)
         user.blocked_comment = block_data.comment
         self.db.commit()
         self.db.refresh(user)
@@ -88,7 +87,7 @@ class UserRepository:
         return user
 
     def delete(self, user: User) -> None:
-        user.deleted_at = datetime.utcnow()
+        user.deleted_at = datetime.now(timezone.utc)
         self.db.commit()
 
     def restore(self, user: User) -> User:

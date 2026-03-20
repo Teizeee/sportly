@@ -1,3 +1,6 @@
+SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci';
+SET CHARACTER SET utf8mb4;
+
 ALTER DATABASE `db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `user` (
@@ -137,24 +140,26 @@ CREATE TABLE IF NOT EXISTS `client_membership` (
 
 
 CREATE TABLE IF NOT EXISTS `trainer_package` (
-    `id` VARCHAR(36) PRIMARY KEY,
+    `id` VARCHAR(36) NOT NULL UNIQUE,
     `trainer_id` VARCHAR(36) NOT NULL,
     `name` VARCHAR(255) NOT NULL,
     `session_count` INT NOT NULL,
     `price` DECIMAL(10,2) NOT NULL,
-    `description` VARCHAR(255)
+    `description` VARCHAR(255),
+	PRIMARY KEY(`id`)
 );
 
 
 CREATE TABLE IF NOT EXISTS `user_trainer_package` (
-    `id` VARCHAR(36) PRIMARY KEY,
+    `id` VARCHAR(36) NOT NULL UNIQUE,
     `user_id` VARCHAR(36) NOT NULL,
     `trainer_package_id` VARCHAR(36) NOT NULL,
     `status` ENUM('PURCHASED', 'ACTIVE', 'FINISHED') NOT NULL,
     `sessions_left` INT NOT NULL,
     `purchased_at` DATE NOT NULL,
     `activated_at` DATE,
-    `expires_at` DATE
+    `expires_at` DATE,
+	PRIMARY KEY(`id`)
 );
 
 
@@ -187,7 +192,7 @@ CREATE TABLE IF NOT EXISTS `client_progress` (
 );
 
 
-CREATE TABLE IF NOT EXISTS `subscribtion_text` (
+CREATE TABLE IF NOT EXISTS `subscription_text` (
 	`id` VARCHAR(36) NOT NULL UNIQUE,
 	`description` TEXT NOT NULL,
 	PRIMARY KEY(`id`)
@@ -196,7 +201,8 @@ CREATE TABLE IF NOT EXISTS `subscribtion_text` (
 
 CREATE TABLE IF NOT EXISTS `platform_subscriptions` (
 	`id` VARCHAR(36) NOT NULL UNIQUE,
-	`value` VARCHAR(255) NOT NULL UNIQUE,
+	`value` INT NOT NULL UNIQUE,
+    `description` VARCHAR(255) NOT NULL,
 	PRIMARY KEY(`id`)
 );
 
@@ -264,7 +270,7 @@ ADD FOREIGN KEY(`user_id`) REFERENCES `user`(`id`);
 ALTER TABLE `trainer_review`
 ADD FOREIGN KEY(`trainer_id`) REFERENCES `trainer`(`id`);
 ALTER TABLE `gym_review`
-ADD FOREIGN KEY(`user_id`) REFERENCES `gym`(`id`);
+ADD FOREIGN KEY(`user_id`) REFERENCES `user`(`id`);
 ALTER TABLE `gym_review`
 ADD FOREIGN KEY(`gym_id`) REFERENCES `gym`(`id`);
 
@@ -279,6 +285,27 @@ ADD FOREIGN KEY(`gym_id`) REFERENCES `gym`(`id`);
 ALTER TABLE `gym_blocking`
 ADD FOREIGN KEY(`user_id`) REFERENCES `user`(`id`);
 
+
+INSERT INTO `platform_subscriptions` (`id`, `value`, `description`)
+VALUES ('11111111-1111-1111-1111-101111111111', 1, '1 Месяц'),
+('11111111-1111-1111-1111-110111111111', 3, '3 Месяца'),
+('11111111-1111-1111-1111-111011111111', 12, '12 Месяцев') ON DUPLICATE KEY UPDATE value=value;
+
+INSERT INTO `subscription_text` (`id`, `description`)
+VALUES ('11111001-1111-1111-1111-101111111111', 'После отправки формы подтверждения, пожалуйста, переходите к оплате.
+1. Выберите тариф:
+- 1 месяц — 10 000 ₽
+- 6 месяцев — 50 000 ₽
+- 12 месяцев — 90 000 ₽
+2. Оплатите. Для этого воспользуйтесь реквизитами ниже.
+Важно: Заявка будет отклонена, если оплата не поступит в течение 24 часов.
+Реквизиты для перевода:
+Получатель: ИП Иванов Иван
+Номер счета: 1234567890123
+В обязательном порядке укажите в комментарии к переводу:
+- Название зала
+- Ваш номер телефона
+- Выбранный вид подписки (Месяц / 6 месяцев / Год)') ON DUPLICATE KEY UPDATE description=description;
 
 
 INSERT INTO `user` (`id`, `role`, `first_name`, `last_name`, `email`, `password`, `created_at`)
@@ -311,3 +338,5 @@ INSERT INTO `gym_application` (`id`, `title`, `address`, `description`, `phone`,
 VALUES ('11111111-1111-1111-1111-111111111101', 'Фитнес-центр "Атлант"', 'ул. Ленина, 15, Москва', 'Современный тренажерный зал с кардио-зоной и свободными весами', '+7 (495) 123-45-67', 'APPROVED', NULL, NOW(), '22222222-2222-2222-2222-222222222222');
 INSERT INTO `gym` (`id`, `gym_application_id`, `created_at`, `status`)
 VALUES ('22222222-2222-2222-2222-222222222202', '11111111-1111-1111-1111-111111111101', NOW(), 'ACTIVE');
+INSERT INTO `gym_subscription` (`id`, `gym_id`, `start_date`, `end_date`)
+VALUES ('33333333-2222-2222-2222-222222222202', '22222222-2222-2222-2222-222222222202', '2026-03-21', '2027-03-21');

@@ -98,4 +98,5 @@ def require_roles(allowed_roles: list[UserRole]):
 
 
 require_admin = require_roles([UserRole.GYM_ADMIN, UserRole.SUPER_ADMIN])
+require_gym_admin = require_roles([UserRole.GYM_ADMIN])
 require_super_admin = require_roles([UserRole.SUPER_ADMIN])

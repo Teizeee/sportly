@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from typing import Optional
 
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import UserCreate, UserLogin, UserUpdate, UserBlock, PasswordChange

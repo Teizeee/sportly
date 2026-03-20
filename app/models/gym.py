@@ -48,6 +48,7 @@ class Gym(Base):
     gym_application = relationship("GymApplication", back_populates="gym", uselist=False)
     trainers = relationship("Trainer", back_populates="gym")
     photos = relationship("GymPhoto", cascade="all, delete-orphan")
+    subscriptions = relationship("GymSubscription", back_populates="gym")
 
     def __repr__(self):
         return f"<Gym {self.id} ({self.status})>"
