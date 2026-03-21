@@ -1,10 +1,12 @@
+from typing import List
+
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from app.repositories.user_repository import UserRepository
-from app.schemas.user import UserCreate, UserLogin, UserUpdate, UserBlock, PasswordChange
+from app.schemas.user import UserCreate, UserLogin, UserUpdate, UserBlock, PasswordChange, UsersCount
 from app.core.security import verify_password, get_password_hash, create_access_token
-from app.models.user import User
+from app.models.user import User, UserRole
 
 
 class AuthService:
@@ -92,17 +94,36 @@ class AuthService:
             )
 
         return user
+    
+    def get_users(self, role: UserRole) -> List[User]:
+        return self.user_repo.get_all(
+            limit=10000,
+            role=role
+        )
+    
+    def users_count(self) -> UsersCount:
+        stats = self.user_repo.get_count()
+        return UsersCount(
+            total=stats.total,
+            clients=stats.clients,
+            trainers=stats.trainers,
+            gym_admins=stats.gym_admins
+        )
 
     def update_profile(self, user_id: str, update_data: UserUpdate) -> User:
-        user = self.get_current_user(user_id)
+        user = self.user_repo.get_by_id(user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
 
-        if update_data.email and update_data.email != user.email:
-            existing_user = self.user_repo.get_by_email(update_data.email)
-            if existing_user:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Email already in use"
-                )
+        existing_user = self.user_repo.get_by_email(update_data.email)
+        if existing_user.id != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already in use"
+            )
 
         return self.user_repo.update(user, update_data)
 

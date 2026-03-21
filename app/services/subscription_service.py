@@ -1,5 +1,7 @@
+from datetime import date
 from typing import List
 
+from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -42,5 +44,5 @@ class SubscriptionService:
     def gym_subscription(self, gym_id: str, month_count: int) -> GymSubscription:
         gym_sub = self.gym_subscription_repo.get_by_gym_id(gym_id)
         if gym_sub:
-            return self.gym_subscription_repo.update(gym_sub, month_count)
-        return self.gym_subscription_repo.create(gym_id, month_count)
+            return self.gym_subscription_repo.update(gym_sub, gym_sub.end_date + relativedelta(months=month_count))
+        return self.gym_subscription_repo.create(gym_id, date.today() + relativedelta(months=month_count))

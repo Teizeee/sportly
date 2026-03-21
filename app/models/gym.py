@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Enum, ForeignKey
+from sqlalchemy import Column, SmallInteger, String, DateTime, Enum, ForeignKey, Time
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import enum
@@ -48,7 +48,8 @@ class Gym(Base):
     gym_application = relationship("GymApplication", back_populates="gym", uselist=False)
     trainers = relationship("Trainer", back_populates="gym")
     photos = relationship("GymPhoto", cascade="all, delete-orphan")
-    subscriptions = relationship("GymSubscription", back_populates="gym")
+    subscription = relationship("GymSubscription", back_populates="gym", uselist=False)
+    schedule = relationship("GymSchedule", cascade="all, delete-orphan", order_by="GymSchedule.day_of_week.asc()")
 
     def __repr__(self):
         return f"<Gym {self.id} ({self.status})>"
@@ -60,6 +61,19 @@ class Gym(Base):
     @property
     def is_blocked(self) -> bool:
         return self.status == GymStatus.BLOCKED
+
+
+class GymSchedule(Base):
+    __tablename__ = "gym_schedule"
+
+    id = Column(String(36), primary_key=True, index=True, unique=True)
+    gym_id = Column(String(36), ForeignKey("gym.id"), nullable=False)
+    day_of_week = Column(SmallInteger, nullable=False)
+    open_time = Column(Time, nullable=True)
+    close_time = Column(Time, nullable=True)
+
+    def __repr__(self):
+        return f"<GymSchedule {self.day_of_week}: ({self.open_time}-{self.close_time})>"
 
     
 class GymPhoto(Base):

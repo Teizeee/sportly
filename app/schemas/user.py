@@ -2,6 +2,7 @@ from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from datetime import datetime, date
 from typing import Optional
 from app.models.user import UserRole
+from app.schemas.gym import GetGym, GetGymApplication
 
 
 class UserBase(BaseModel):
@@ -38,7 +39,17 @@ class UserResponse(UserBase):
 
     avatar: Optional[AvatarResponse] = None
 
+    gym_application: Optional[GetGymApplication] = None
+    gym: Optional[GetGym] = None
+
     model_config = ConfigDict(from_attributes=True)
+
+
+class UsersCount(BaseModel):
+    total: int = 0
+    clients: int = 0
+    trainers: int = 0
+    gym_admins: int = 0
 
 
 class TokenResponse(BaseModel):
@@ -57,6 +68,9 @@ class UserUpdate(BaseModel):
     patronymic: Optional[str] = Field(None, max_length=255)
     birth_date: Optional[date] = None
     email: Optional[EmailStr] = None
+    password: Optional[str] = Field(None, min_length=8)
+    phone: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = Field(None, min_length=1, max_length=255)
 
 
 class UserBlock(BaseModel):

@@ -31,7 +31,7 @@ class GymSubscription(Base):
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
 
-    gym = relationship("Gym", back_populates="subscriptions", uselist=False)
+    gym = relationship("Gym", back_populates="subscription", uselist=False)
 
     def __repr__(self):
         return f"<GymSubscription {self.id} for gym {self.gym_id} ({self.start_date} - {self.end_date})>"

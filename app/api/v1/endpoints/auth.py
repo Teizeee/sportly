@@ -1,6 +1,6 @@
-from typing import Optional
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import dependencies
@@ -10,11 +10,11 @@ from app.schemas.user import (
     TokenResponse, UserUpdate, UserBlock, PasswordChange
 )
 from app.services.auth_service import AuthService
-from app.models.user import User
+from app.models.user import User, UserRole
 
 router = APIRouter()
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED, response_model_exclude_none=True)
 async def register(
     user_data: UserCreate,
     db: Session = Depends(get_db),
@@ -34,14 +34,14 @@ async def login(
     return auth_service.login(login_data)
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me", response_model=UserResponse, response_model_exclude_none=True)
 async def get_current_user_info(
     current_user: User = Depends(dependencies.get_current_active_user)
 ):
     return current_user
 
 
-@router.put("/me", response_model=UserResponse)
+@router.put("/me", response_model=UserResponse, response_model_exclude_none=True)
 async def update_profile(
     update_data: UserUpdate,
     current_user: User = Depends(dependencies.get_current_active_user),
@@ -72,7 +72,26 @@ async def delete_own_account(
     return None
 
 
-@router.post("/users/{user_id}/block", response_model=UserResponse)
+@router.get("/users", response_model=List[UserResponse], response_model_exclude_none=True)
+async def get_users(
+    role: Optional[UserRole] = Query(None, description="Filter users by role"),
+    _: User = Depends(dependencies.require_super_admin),
+    db: Session = Depends(get_db)
+):
+    auth_service = AuthService(db)
+    return auth_service.get_users(role)
+
+
+@router.get("/users/count")
+async def users_count(
+    _: User = Depends(dependencies.require_super_admin),
+    db: Session = Depends(get_db)
+):
+    auth_service = AuthService(db)
+    return auth_service.users_count()
+
+
+@router.post("/users/{user_id}/block", response_model=UserResponse, response_model_exclude_none=True)
 async def block_user(
     user_id: str,
     block_data: UserBlock,
@@ -83,7 +102,7 @@ async def block_user(
     return auth_service.block_user(current_user.id, user_id, block_data)
 
 
-@router.post("/users/{user_id}/unblock", response_model=UserResponse)
+@router.post("/users/{user_id}/unblock", response_model=UserResponse, response_model_exclude_none=True)
 async def unblock_user(
     user_id: str,
     current_user: User = Depends(dependencies.require_super_admin),
@@ -91,6 +110,17 @@ async def unblock_user(
 ):
     auth_service = AuthService(db)
     return auth_service.unblock_user(current_user.id, user_id)
+
+
+@router.put("/users/{user_id}", response_model=UserResponse, response_model_exclude_none=True)
+async def update_profile(
+    user_id: str,
+    update_data: UserUpdate,
+    _: User = Depends(dependencies.require_super_admin),
+    db: Session = Depends(get_db)
+):
+    auth_service = AuthService(db)
+    return auth_service.update_profile(user_id, update_data)
 
 
 @router.delete("/users/{user_id}")

@@ -1,3 +1,4 @@
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 from typing import Optional, List
@@ -63,6 +64,16 @@ class UserRepository:
             query = query.filter(User.role == role)
 
         return query.offset(skip).limit(limit).all()
+    
+    def get_count(self):
+        return self.db.query(
+            func.count(User.id).label('total'),
+            func.sum(case((User.role == 'CLIENT', 1), else_=0)).label('clients'),
+            func.sum(case((User.role == 'TRAINER', 1), else_=0)).label('trainers'),
+            func.sum(case((User.role == 'GYM_ADMIN', 1), else_=0)).label('gym_admins')
+        ).filter(
+            User.deleted_at.is_(None)
+        ).first()
 
     def update(self, user: User, update_data: UserUpdate) -> User:
         for field, value in update_data.model_dump(exclude_unset=True).items():

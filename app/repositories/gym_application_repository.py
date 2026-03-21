@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 import uuid
 
 from sqlalchemy.orm import Session
@@ -25,6 +25,9 @@ class GymApplicationRepository:
         self.db.commit()
         self.db.refresh(gym_application)
         return gym_application
+    
+    def get_all(self) -> List[GymApplication]:
+        return self.db.query(GymApplication).filter(GymApplication.status == GymApplicationStatus.ON_MODERATION).all()
 
     def get_by_id(self, application_id: str) -> Optional[GymApplication]:
         return self.db.query(GymApplication).filter(GymApplication.id == application_id).first()
@@ -32,7 +35,8 @@ class GymApplicationRepository:
     def update(self, application: GymApplication, update_data: BaseGymApplication) -> GymApplication:
         for field, value in update_data.model_dump(exclude_unset=True).items():
             setattr(application, field, value)
-        application.status = GymApplicationStatus.ON_MODERATION
+        if application.status != GymApplicationStatus.APPROVED:
+            application.status = GymApplicationStatus.ON_MODERATION
         self.db.commit()
         self.db.refresh(application)
         return application
