@@ -12,7 +12,6 @@ from app.repositories.subscription_text_repository import SubscriptionTextReposi
 from app.schemas.subscription import EditSubscriptionText
 
 
-
 class SubscriptionService:
     def __init__(self, db: Session):
         self.db = db
