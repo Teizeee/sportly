@@ -4,6 +4,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from app.models.gym import GymApplicationStatus, GymStatus
+from app.schemas.service import MembershipTypeModel, TrainerPackageModel
 
 
 class BaseGymApplication(BaseModel):
@@ -26,6 +27,8 @@ class GetGym(BaseModel):
     gym_application: GetGymApplication = None
     schedule: List[GymScheduleModel] = []
     subscription: Optional[Subscription] = None
+    membership_types: List[MembershipTypeModel] = []
+    trainer_packages: List[TrainerPackageModel] = []
 
 class GetGymApplication(BaseGymApplication):
     id: str = Field(..., min_length=1, max_length=36)

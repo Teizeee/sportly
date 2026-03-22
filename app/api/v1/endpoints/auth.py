@@ -1,14 +1,15 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import dependencies
 from app.core.database import get_db
 from app.schemas.user import (
-    UserCreate, UserLogin, UserResponse,
+    GetUserTrainer, UserCreate, UserLogin,
     TokenResponse, UserUpdate, UserBlock, PasswordChange
 )
+from app.schemas.user_profile import UserResponse
 from app.services.auth_service import AuthService
 from app.models.user import User, UserRole
 
@@ -72,14 +73,15 @@ async def delete_own_account(
     return None
 
 
-@router.get("/users", response_model=List[UserResponse], response_model_exclude_none=True)
+@router.get("/users", response_model=List[GetUserTrainer], response_model_exclude_none=True)
 async def get_users(
+    gym_id: Optional[str] = Query(None, description="Filter users by gym"),
     role: Optional[UserRole] = Query(None, description="Filter users by role"),
-    _: User = Depends(dependencies.require_super_admin),
+    current_user: User = Depends(dependencies.require_admin),
     db: Session = Depends(get_db)
 ):
     auth_service = AuthService(db)
-    return auth_service.get_users(role)
+    return auth_service.get_users(current_user, gym_id, role)
 
 
 @router.get("/users/count")

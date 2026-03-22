@@ -32,7 +32,7 @@ class AuthService:
             else:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="User can not register as TRAINER by himself"
+                    detail="User can only be registered as TRAINER by gym admin"
                 )
             
 
@@ -95,10 +95,16 @@ class AuthService:
 
         return user
     
-    def get_users(self, role: UserRole) -> List[User]:
+    def get_users(self, current_user: User, gym_id: str, role: UserRole) -> List[User]:
+        if current_user.role == "GYM_ADMIN":
+            if current_user.gym.id != gym_id or role in ["GYM_ADMIN", "SUPER_ADMIN"]:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Not enough permissions"
+                )
+
         return self.user_repo.get_all(
-            limit=10000,
-            role=role
+            gym_id, role
         )
     
     def users_count(self) -> UsersCount:
@@ -142,14 +148,6 @@ class AuthService:
         return True
 
     def block_user(self, admin_id: str, target_user_id: str, block_data: UserBlock) -> User:
-        admin = self.get_current_user(admin_id)
-
-        if admin.role != "SUPER_ADMIN":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions"
-            )
-
         if admin_id == target_user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -166,14 +164,6 @@ class AuthService:
         return self.user_repo.block(target_user, block_data)
 
     def unblock_user(self, admin_id: str, target_user_id: str) -> User:
-        admin = self.get_current_user(admin_id)
-
-        if admin.role != "SUPER_ADMIN":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions"
-            )
-
         target_user = self.user_repo.get_by_id(target_user_id)
         if not target_user:
             raise HTTPException(

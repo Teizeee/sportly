@@ -50,6 +50,14 @@ class Gym(Base):
     photos = relationship("GymPhoto", cascade="all, delete-orphan")
     subscription = relationship("GymSubscription", back_populates="gym", uselist=False)
     schedule = relationship("GymSchedule", cascade="all, delete-orphan", order_by="GymSchedule.day_of_week.asc()")
+    membership_types = relationship("MembershipType", back_populates="gym")
+
+    @property
+    def trainer_packages(self):
+        packages = []
+        for trainer in self.trainers:
+            packages.extend(trainer.trainer_packages)
+        return packages
 
     def __repr__(self):
         return f"<Gym {self.id} ({self.status})>"

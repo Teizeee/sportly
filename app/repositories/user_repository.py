@@ -1,9 +1,11 @@
-from sqlalchemy import case, func
+from sqlalchemy import case, exists, func
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 from typing import Optional, List
 import uuid
 
+from app.models.gym import Gym, GymApplication
+from app.models.service import ClientMembership, MembershipType
 from app.models.user import User, UserRole
 from app.models.trainer import Trainer
 from app.schemas.user import UserCreate, UserUpdate, UserBlock
@@ -50,20 +52,43 @@ class UserRepository:
 
     def get_all(
             self,
-            skip: int = 0,
-            limit: int = 100,
-            include_deleted: bool = False,
+            gym_id: Optional[str] = None,
             role: Optional[UserRole] = None
     ) -> List[User]:
-        query = self.db.query(User)
-
-        if not include_deleted:
-            query = query.filter(User.deleted_at.is_(None))
+        query = self.db.query(User).filter(User.deleted_at.is_(None))
 
         if role:
             query = query.filter(User.role == role)
 
-        return query.offset(skip).limit(limit).all()
+        if role == "SUPER_ADMIN":
+            return query.all()
+
+        if gym_id:
+            match role:
+                case "CLIENT":
+                    query = query.filter(
+                        exists().where(
+                            (ClientMembership.user_id == User.id) &
+                            (ClientMembership.membership_type_id == MembershipType.id) &
+                            (MembershipType.gym_id == gym_id)
+                        )
+                    )
+                case "TRAINER":
+                    query = query.filter(
+                        User.trainer_profile.has(
+                            Trainer.gym_id == gym_id
+                        )
+                    )
+                case "GYM_ADMIN":
+                    query = query.filter(
+                        exists().where(
+                            (GymApplication.gym_admin_id == User.id) &
+                            (GymApplication.id == Gym.gym_application_id) &
+                            (Gym.id == gym_id)
+                        )
+                    )
+
+        return query.all()
     
     def get_count(self):
         return self.db.query(

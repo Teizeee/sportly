@@ -1,8 +1,7 @@
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
-from datetime import datetime, date
+from pydantic import BaseModel, EmailStr, Field
+from datetime import date
 from typing import Optional
 from app.models.user import UserRole
-from app.schemas.gym import GetGym, GetGymApplication
 
 
 class UserBase(BaseModel):
@@ -29,20 +28,22 @@ class UserLogin(BaseModel):
 class AvatarResponse(BaseModel):
     link: str
 
+class TrainerBase(BaseModel):
+    id: str = Field(..., min_length=1, max_length=36)
+    user_id: str = Field(..., min_length=1, max_length=36)
+    gym_id: str = Field(..., min_length=1, max_length=36)
+    phone: str = Field(..., min_length=1, max_length=255)
+    description: str = Field(..., min_length=1, max_length=255)
 
-class UserResponse(UserBase):
-    id: str
-    created_at: datetime
-    blocked_at: Optional[datetime] = None
-    blocked_comment: Optional[str] = None
-    deleted_at: Optional[datetime] = None
 
-    avatar: Optional[AvatarResponse] = None
+class GetUserWithId(UserBase):
+    id: str = Field(..., min_length=1, max_length=36)
 
-    gym_application: Optional[GetGymApplication] = None
-    gym: Optional[GetGym] = None
+class GetUserTrainer(GetUserWithId):
+    trainer_profile: Optional[TrainerBase] = None
 
-    model_config = ConfigDict(from_attributes=True)
+class GetTrainer(TrainerBase):
+    user: GetUserWithId = None
 
 
 class UsersCount(BaseModel):

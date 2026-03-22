@@ -16,6 +16,7 @@ class Trainer(Base):
 
     user = relationship("User", back_populates="trainer_profile", uselist=False)
     gym = relationship("Gym", back_populates="trainers", uselist=False)
+    trainer_packages = relationship("TrainerPackage", back_populates="trainer")
 
     def __repr__(self):
         return f"<Trainer {self.id} for user {self.user_id}>"
