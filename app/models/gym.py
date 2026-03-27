@@ -51,6 +51,7 @@ class Gym(Base):
     subscription = relationship("GymSubscription", back_populates="gym", uselist=False)
     schedule = relationship("GymSchedule", cascade="all, delete-orphan", order_by="GymSchedule.day_of_week.asc()")
     membership_types = relationship("MembershipType", back_populates="gym")
+    blockings = relationship("GymBlocking", back_populates="gym", order_by="GymBlocking.created_at.desc()")
 
     @property
     def trainer_packages(self):
@@ -93,3 +94,19 @@ class GymPhoto(Base):
 
     def __repr__(self):
         return f"<GymPhoto {self.id} for gym {self.gym_id}>"
+
+
+class GymBlocking(Base):
+    __tablename__ = "gym_blocking"
+
+    id = Column(String(36), primary_key=True, index=True, unique=True)
+    user_id = Column(String(36), ForeignKey("user.id"), nullable=False)
+    gym_id = Column(String(36), ForeignKey("gym.id"), nullable=False)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    comment = Column(String(255), nullable=True)
+
+    user = relationship("User", back_populates="gym_blockings", uselist=False)
+    gym = relationship("Gym", back_populates="blockings", uselist=False)
+
+    def __repr__(self):
+        return f"<GymBlocking {self.id} user={self.user_id} gym={self.gym_id}>"

@@ -77,11 +77,12 @@ async def delete_own_account(
 async def get_users(
     gym_id: Optional[str] = Query(None, description="Filter users by gym"),
     role: Optional[UserRole] = Query(None, description="Filter users by role"),
+    is_blocked: Optional[bool] = Query(None, description="Filter blocked users"),
     current_user: User = Depends(dependencies.require_admin),
     db: Session = Depends(get_db)
 ):
     auth_service = AuthService(db)
-    return auth_service.get_users(current_user, gym_id, role)
+    return auth_service.get_users(current_user, gym_id, role, is_blocked)
 
 
 @router.get("/users/count")

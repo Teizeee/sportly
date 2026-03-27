@@ -43,6 +43,7 @@ class User(Base):
         uselist=False,
         cascade="all, delete-orphan"
     )
+    gym_blockings = relationship("GymBlocking", back_populates="user", order_by="GymBlocking.created_at.desc()")
 
     def __repr__(self):
         return f"<User {self.email}>"

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
@@ -95,7 +95,13 @@ class AuthService:
 
         return user
     
-    def get_users(self, current_user: User, gym_id: str, role: UserRole) -> List[User]:
+    def get_users(
+        self,
+        current_user: User,
+        gym_id: Optional[str],
+        role: Optional[UserRole],
+        is_blocked: Optional[bool]
+    ) -> List[User]:
         if current_user.role == "GYM_ADMIN":
             if current_user.gym.id != gym_id or role in ["GYM_ADMIN", "SUPER_ADMIN"]:
                 raise HTTPException(
@@ -104,7 +110,7 @@ class AuthService:
                 )
 
         return self.user_repo.get_all(
-            gym_id, role
+            gym_id, role, is_blocked
         )
     
     def users_count(self) -> UsersCount:

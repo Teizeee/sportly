@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Optional, List
 import uuid
 
-from app.models.gym import Gym, GymApplication
+from app.models.gym import Gym, GymApplication, GymBlocking
 from app.models.service import ClientMembership, MembershipType
 from app.models.user import User, UserRole
 from app.models.trainer import Trainer
@@ -53,7 +53,8 @@ class UserRepository:
     def get_all(
             self,
             gym_id: Optional[str] = None,
-            role: Optional[UserRole] = None
+            role: Optional[UserRole] = None,
+            is_blocked: Optional[bool] = None
     ) -> List[User]:
         query = self.db.query(User).filter(User.deleted_at.is_(None))
 
@@ -87,6 +88,16 @@ class UserRepository:
                             (Gym.id == gym_id)
                         )
                     )
+
+        if is_blocked is not None:
+            if gym_id:
+                gym_blocking_exists = exists().where(
+                    (GymBlocking.user_id == User.id) &
+                    (GymBlocking.gym_id == gym_id)
+                )
+                query = query.filter(gym_blocking_exists if is_blocked else ~gym_blocking_exists)
+            else:
+                query = query.filter(User.blocked_at.is_not(None) if is_blocked else User.blocked_at.is_(None))
 
         return query.all()
     

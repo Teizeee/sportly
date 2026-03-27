@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlalchemy.orm import Session
@@ -7,6 +7,7 @@ from app.api import dependencies
 from app.core.database import get_db
 from app.models.user import User
 from app.schemas.gym import ApproveGymApplication, BaseGymApplication, GetGym, RejectGymApplication, UpdateGym
+from app.services.gym_blocking_service import GymBlockingService
 from app.services.gym_photo_service import GymPhotoService
 from app.services.gym_service import GymService
 
@@ -94,6 +95,29 @@ async def unblock_gym(
 ):
     gym_service = GymService(db)
     return gym_service.unblock_gym(gym_id)
+
+@router.post("/{gym_id}/block/{user_id}", status_code=status.HTTP_200_OK)
+async def block_user_in_gym(
+    gym_id: str,
+    user_id: str,
+    comment: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.require_gym_admin)
+):
+    gym_blocking_service = GymBlockingService(db)
+    return gym_blocking_service.block_user(current_user, gym_id, user_id, comment)
+
+
+@router.post("/{gym_id}/unblock/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def unblock_user_in_gym(
+    gym_id: str,
+    user_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.require_gym_admin)
+):
+    gym_blocking_service = GymBlockingService(db)
+    gym_blocking_service.unblock_user(current_user, gym_id, user_id)
+    return None
 
 
 @router.post("/{gym_id}/photos", status_code=status.HTTP_201_CREATED)
