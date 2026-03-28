@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -54,8 +54,21 @@ class GymService:
         )
     
 
-    def get_gyms(self) -> List[Gym]:
-        return self.gym_repo.get_gyms()
+    def get_gyms(
+        self,
+        name: Optional[str] = None,
+        city: Optional[str] = None,
+        min_rating: Optional[int] = None
+    ) -> List[Gym]:
+        normalized_name = name.strip() if name and name.strip() else None
+        normalized_city = city.strip() if city and city.strip() else None
+        gyms = self.gym_repo.get_gyms(normalized_name, normalized_city, min_rating)
+        ratings = self.gym_repo.get_gyms_ratings([gym.id for gym in gyms])
+
+        for gym in gyms:
+            gym.rating = ratings.get(gym.id)
+
+        return gyms
     
 
     def get_gyms_count(self) -> int:

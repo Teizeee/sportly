@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, File, UploadFile, status
+from fastapi import APIRouter, Depends, File, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api import dependencies
@@ -30,13 +30,27 @@ async def application(
     gym_service = GymService(db)
     return gym_service.gym_application(current_user, gym_application)
 
-@router.get("/", status_code=status.HTTP_200_OK, response_model=List[GetGym])
+@router.get(
+    "/",
+    status_code=status.HTTP_200_OK,
+    response_model=List[GetGym],
+    response_model_exclude_none=True
+)
 async def get_gyms(
+    name: Optional[str] = Query(default=None),
+    city: Optional[str] = Query(default=None),
+    rating: Optional[int] = Query(default=None, ge=1, le=5),
     db: Session = Depends(get_db),
-    _: User = Depends(dependencies.require_super_admin)
+    current_user: User = Depends(dependencies.get_current_active_user)
 ):
     gym_service = GymService(db)
-    return gym_service.get_gyms()
+    gyms = gym_service.get_gyms(name=name, city=city, min_rating=rating)
+
+    if current_user.role != "SUPER_ADMIN":
+        for gym in gyms:
+            gym.subscription = None
+
+    return gyms
 
 @router.get("/count", status_code=status.HTTP_200_OK)
 async def get_gyms_count(

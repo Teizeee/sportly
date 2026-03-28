@@ -26,6 +26,7 @@ class RejectGymApplication(BaseModel):
 class GetGym(BaseModel):
     id: str = Field(..., min_length=1, max_length=36)
     status: GymStatus = GymStatus.ACTIVE
+    rating: Optional[float] = Field(default=None, ge=1, le=5)
     gym_application: GetGymApplication = None
     schedule: List[GymScheduleModel] = []
     subscription: Optional[Subscription] = None
