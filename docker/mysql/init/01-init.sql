@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS `trainer_slot` (
 	`start_time` DATETIME NOT NULL,
 	`end_time` DATETIME NOT NULL,
 	`created_at` DATETIME NOT NULL,
+	`deleted_at` DATETIME,
 	PRIMARY KEY(`id`)
 );
 
