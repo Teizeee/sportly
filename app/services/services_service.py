@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.models.service import MembershipType, TrainerPackage
+from app.models.trainer import Trainer
 from app.models.user import User
 from app.repositories.membership_type_repository import MembershipTypeRepository
 from app.repositories.trainer_package_repository import TrainerPackageRepository
@@ -55,6 +56,15 @@ class ServicesService:
         self.membership_type_repo.delete(membership_type)
 
     # Пакеты с тренерами
+
+    def get_trainers(self, gym_id: str) -> List[Trainer]:
+        trainers = self.trainer_repo.get_by_gym_id(gym_id)
+        ratings = self.trainer_repo.get_trainers_ratings([trainer.id for trainer in trainers])
+
+        for trainer in trainers:
+            trainer.rating = ratings.get(trainer.id)
+
+        return trainers
 
     def get_trainer_packages(self, gym_id: str) -> List[TrainerPackage]:
         return self.trainer_package_repo.get_by_gym_id(gym_id)

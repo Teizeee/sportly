@@ -44,6 +44,7 @@ class GetUserTrainer(GetUserWithId):
 
 class GetTrainer(TrainerBase):
     user: GetUserWithId = None
+    rating: Optional[float] = Field(default=None, ge=1, le=5)
 
 
 class UsersCount(BaseModel):

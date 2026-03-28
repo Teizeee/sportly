@@ -7,9 +7,11 @@ from app.api import dependencies
 from app.core.database import get_db
 from app.models.user import User
 from app.schemas.gym import ApproveGymApplication, BaseGymApplication, GetGym, RejectGymApplication, UpdateGym
+from app.schemas.user import GetTrainer
 from app.services.gym_blocking_service import GymBlockingService
 from app.services.gym_photo_service import GymPhotoService
 from app.services.gym_service import GymService
+from app.services.services_service import ServicesService
 
 router = APIRouter()
 
@@ -51,6 +53,20 @@ async def get_gyms(
             gym.subscription = None
 
     return gyms
+
+@router.get(
+    "/{gym_id}/trainers",
+    response_model=List[GetTrainer],
+    response_model_exclude_none=True,
+    status_code=status.HTTP_200_OK
+)
+async def get_trainers(
+        gym_id: str,
+        db: Session = Depends(get_db),
+        _: User = Depends(dependencies.get_current_active_user),
+):
+    services_service = ServicesService(db)
+    return services_service.get_trainers(gym_id)
 
 @router.get("/count", status_code=status.HTTP_200_OK)
 async def get_gyms_count(
