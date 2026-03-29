@@ -1,3 +1,4 @@
+from datetime import date
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, File, Query, UploadFile, status
@@ -49,6 +50,11 @@ async def get_gyms(
     gyms = gym_service.get_gyms(name=name, city=city, min_rating=rating)
 
     if current_user.role != "SUPER_ADMIN":
+        today = date.today()
+        gyms = [
+            gym for gym in gyms
+            if gym.subscription and gym.subscription.start_date <= today <= gym.subscription.end_date
+        ]
         for gym in gyms:
             gym.subscription = None
 
