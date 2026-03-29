@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, avatar, booking, client_assets, client_service, gym, progress, service, subscription, trainer_slot
+from app.api.v1.endpoints import auth, avatar, booking, client_assets, client_service, gym, progress, review, service, subscription, trainer_slot
 
 api_router = APIRouter()
 
@@ -50,6 +50,11 @@ api_router.include_router(
     progress.router,
     prefix="/clients",
     tags=["client progress"]
+)
+
+api_router.include_router(
+    review.router,
+    tags=["reviews"]
 )
 
 api_router.include_router(

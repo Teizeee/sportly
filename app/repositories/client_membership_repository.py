@@ -5,7 +5,7 @@ from typing import List, Optional
 from sqlalchemy import case
 from sqlalchemy.orm import Session
 
-from app.models.service import ClientMembership, ClientMembershipStatus
+from app.models.service import ClientMembership, ClientMembershipStatus, MembershipType
 
 
 class ClientMembershipRepository:
@@ -52,6 +52,15 @@ class ClientMembershipRepository:
         ).order_by(
             ClientMembership.activated_at.desc()
         ).first()
+
+    def has_active_membership_for_gym(self, user_id: str, gym_id: str) -> bool:
+        return self.db.query(ClientMembership).join(
+            MembershipType, MembershipType.id == ClientMembership.membership_type_id
+        ).filter(
+            ClientMembership.user_id == user_id,
+            ClientMembership.status == ClientMembershipStatus.ACTIVE,
+            MembershipType.gym_id == gym_id
+        ).first() is not None
 
     def activate(self, membership: ClientMembership, activated_at: date, expires_at: date) -> ClientMembership:
         membership.status = ClientMembershipStatus.ACTIVE

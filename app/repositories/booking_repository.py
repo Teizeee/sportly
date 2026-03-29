@@ -56,3 +56,12 @@ class BookingRepository:
         if updated:
             self.db.commit()
         return updated
+
+    def has_visited_trainer(self, user_id: str, trainer_id: str) -> bool:
+        return self.db.query(Booking).join(
+            TrainerSlot, TrainerSlot.id == Booking.trainer_slot_id
+        ).filter(
+            Booking.user_id == user_id,
+            Booking.status == BookingStatus.VISITED,
+            TrainerSlot.trainer_id == trainer_id
+        ).first() is not None
