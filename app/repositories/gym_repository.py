@@ -107,8 +107,9 @@ class GymRepository:
         self.db.refresh(gym)
         return gym.schedule
 
-    def block(self, gym: Gym) -> Gym:
+    def block(self, gym: Gym, comment: str) -> Gym:
         gym.status = GymStatus.BLOCKED
+        gym.gym_application.comment = comment
         self.db.commit()
         self.db.refresh(gym)
         return gym

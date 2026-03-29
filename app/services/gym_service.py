@@ -86,14 +86,14 @@ class GymService:
         if current_user.role == "SUPER_ADMIN":
             self.subscription_service.gym_subscription_repo.update(gym.subscription, update_gym_data.subscription.end_date)
     
-    def block_gym(self, gym_id: str) -> Gym:
+    def block_gym(self, gym_id: str, comment: str) -> Gym:
         gym = self.gym_repo.get_by_id(gym_id)
         if not gym:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Gym not found"
             )
-        return self.gym_repo.block(gym)
+        return self.gym_repo.block(gym, comment)
     
     def unblock_gym(self, gym_id: str) -> Gym:
         gym = self.gym_repo.get_by_id(gym_id)

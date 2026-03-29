@@ -22,6 +22,9 @@ class ApproveGymApplication(BaseModel):
 class RejectGymApplication(BaseModel):
     comment: str = Field(..., min_length=1, max_length=255)
 
+class BlockGym(BaseModel):
+    comment: str = Field(..., min_length=1, max_length=255)
+
 
 class GetGym(BaseModel):
     id: str = Field(..., min_length=1, max_length=36)

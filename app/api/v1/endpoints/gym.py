@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.api import dependencies
 from app.core.database import get_db
 from app.models.user import User
-from app.schemas.gym import ApproveGymApplication, BaseGymApplication, GetGym, RejectGymApplication, UpdateGym
+from app.schemas.gym import ApproveGymApplication, BaseGymApplication, BlockGym, GetGym, RejectGymApplication, UpdateGym
 from app.schemas.user import GetTrainer
 from app.services.gym_blocking_service import GymBlockingService
 from app.services.gym_photo_service import GymPhotoService
@@ -116,11 +116,12 @@ async def update_gym(
 @router.post("/{gym_id}/block", response_model=GetGym, status_code=status.HTTP_200_OK)
 async def block_gym(
     gym_id: str,
+    block_gym_data: BlockGym,
     db: Session = Depends(get_db),
     _: User = Depends(dependencies.require_super_admin)
 ):
     gym_service = GymService(db)
-    return gym_service.block_gym(gym_id)
+    return gym_service.block_gym(gym_id, block_gym_data.comment)
 
 
 @router.post("/{gym_id}/unblock", response_model=GetGym, status_code=status.HTTP_200_OK)
