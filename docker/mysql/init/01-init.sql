@@ -159,7 +159,6 @@ CREATE TABLE IF NOT EXISTS `user_trainer_package` (
     `sessions_left` INT NOT NULL,
     `purchased_at` DATE NOT NULL,
     `activated_at` DATE,
-    `expires_at` DATE,
 	PRIMARY KEY(`id`)
 );
 

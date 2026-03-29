@@ -88,9 +88,11 @@ class ClientService:
         return self.client_membership_repo.get_by_user_id_ordered(current_user.id)
 
     def get_my_trainer_packages(self, current_user: User) -> List[UserTrainerPackage]:
+        self._sync_expired_trainer_packages(current_user)
         return self.user_trainer_package_repo.get_by_user_id_ordered(current_user.id)
 
     def get_my_active_services(self, current_user: User) -> ActiveClientServicesModel:
+        self._sync_expired_trainer_packages(current_user)
         active_membership = self.client_membership_repo.get_active_by_user_id(current_user.id)
         active_package = self.user_trainer_package_repo.get_active_by_user_id(current_user.id)
         return ActiveClientServicesModel(
@@ -127,6 +129,7 @@ class ClientService:
         return self.client_membership_repo.activate(membership, activated_at, expires_at)
 
     def activate_my_trainer_package(self, current_user: User, user_trainer_package_id: str) -> UserTrainerPackage:
+        self._sync_expired_trainer_packages(current_user)
         user_trainer_package = self.user_trainer_package_repo.get_by_id(user_trainer_package_id)
         if not user_trainer_package or user_trainer_package.user_id != current_user.id:
             raise HTTPException(
@@ -151,6 +154,9 @@ class ClientService:
             return user_trainer_package
 
         return self.user_trainer_package_repo.activate(user_trainer_package, date.today())
+
+    def _sync_expired_trainer_packages(self, current_user: User):
+        self.user_trainer_package_repo.finish_expired_active_packages_for_user(current_user.id)
 
     def _get_client_or_404(self, user_id: str) -> User:
         user = self.user_repo.get_by_id(user_id)

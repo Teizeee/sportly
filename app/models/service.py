@@ -77,7 +77,6 @@ class UserTrainerPackage(Base):
     sessions_left = Column(Integer, nullable=False)
     purchased_at = Column(Date, nullable=False)
     activated_at = Column(Date, nullable=True)
-    expires_at = Column(Date, nullable=True)
 
     user = relationship("User")
     trainer_package = relationship("TrainerPackage")

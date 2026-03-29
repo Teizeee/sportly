@@ -58,7 +58,6 @@ class UserTrainerPackageModel(UserTrainerPackageCreate):
     sessions_left: int = Field(..., ge=0)
     purchased_at: date
     activated_at: Optional[date] = None
-    expires_at: Optional[date] = None
     model_config = ConfigDict(from_attributes=True)
 
 

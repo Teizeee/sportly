@@ -1,12 +1,34 @@
+import asyncio
+import contextlib
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.core.config import settings
 from app.api.v1.router import api_router
+from app.core.config import settings
+from app.core.database import SessionLocal
+from app.repositories.user_trainer_package_repository import UserTrainerPackageRepository
+
+logger = logging.getLogger(__name__)
+
+
+async def _expired_trainer_packages_worker():
+    while True:
+        db = SessionLocal()
+        try:
+            repo = UserTrainerPackageRepository(db)
+            repo.finish_expired_active_packages()
+        except Exception:
+            db.rollback()
+            logger.exception("Failed to finish expired trainer packages")
+        finally:
+            db.close()
+        await asyncio.sleep(24 * 60 * 60)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -15,7 +37,11 @@ async def lifespan(app: FastAPI):
 
     app.mount("/avatars", StaticFiles(directory=settings.avatar_path), name="avatars")
     app.mount("/gyms", StaticFiles(directory=settings.gym_path), name="gyms")
+    app.state.expired_trainer_packages_worker = asyncio.create_task(_expired_trainer_packages_worker())
     yield
+    app.state.expired_trainer_packages_worker.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await app.state.expired_trainer_packages_worker
 
 app = FastAPI(
     title=settings.APP_NAME,

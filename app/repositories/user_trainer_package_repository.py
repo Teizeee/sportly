@@ -2,6 +2,7 @@ from datetime import date
 import uuid
 from typing import List, Optional
 
+from dateutil.relativedelta import relativedelta
 from sqlalchemy import case
 from sqlalchemy.orm import Session
 
@@ -20,8 +21,7 @@ class UserTrainerPackageRepository:
             status=UserTrainerPackageStatus.PURCHASED,
             sessions_left=sessions_left,
             purchased_at=date.today(),
-            activated_at=None,
-            expires_at=None
+            activated_at=None
         )
         self.db.add(user_trainer_package)
         self.db.commit()
@@ -60,3 +60,36 @@ class UserTrainerPackageRepository:
         self.db.commit()
         self.db.refresh(user_trainer_package)
         return user_trainer_package
+
+    def finish_expired_active_packages(self, today: Optional[date] = None) -> int:
+        return self._finish_expired_active_query(
+            self.db.query(UserTrainerPackage).filter(
+                UserTrainerPackage.status == UserTrainerPackageStatus.ACTIVE,
+                UserTrainerPackage.activated_at.isnot(None)
+            ),
+            today=today
+        )
+
+    def finish_expired_active_packages_for_user(self, user_id: str, today: Optional[date] = None) -> int:
+        return self._finish_expired_active_query(
+            self.db.query(UserTrainerPackage).filter(
+                UserTrainerPackage.user_id == user_id,
+                UserTrainerPackage.status == UserTrainerPackageStatus.ACTIVE,
+                UserTrainerPackage.activated_at.isnot(None)
+            ),
+            today=today
+        )
+
+    def _finish_expired_active_query(self, query, today: Optional[date] = None) -> int:
+        current_date = today or date.today()
+        updated = 0
+
+        for user_trainer_package in query.all():
+            if user_trainer_package.activated_at + relativedelta(months=1) <= current_date:
+                user_trainer_package.status = UserTrainerPackageStatus.FINISHED
+                updated += 1
+
+        if updated:
+            self.db.commit()
+
+        return updated
