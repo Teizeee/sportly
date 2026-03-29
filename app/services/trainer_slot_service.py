@@ -10,7 +10,7 @@ from app.models.trainer import Trainer
 from app.models.user import User
 from app.repositories.trainer_repository import TrainerRepository
 from app.repositories.trainer_slot_repository import TrainerSlotRepository
-from app.schemas.trainer_slot import TrainerSlotAvailability, TrainerSlotDayDeleteResult
+from app.schemas.trainer_slot import BookedUserShort, TrainerSlotAvailability, TrainerSlotDayDeleteResult
 
 
 class TrainerSlotService:
@@ -19,8 +19,9 @@ class TrainerSlotService:
         self.trainer_repo = TrainerRepository(db)
         self.trainer_slot_repo = TrainerSlotRepository(db)
 
-    def get_day_slots(self, trainer_id: str, slot_date: date) -> List[TrainerSlotAvailability]:
+    def get_day_slots(self, trainer_id: str, slot_date: date, current_user: User) -> List[TrainerSlotAvailability]:
         trainer = self._get_trainer_or_404(trainer_id)
+        include_booked_user = self._can_view_booked_user(current_user, trainer)
         intervals = self._build_day_intervals(trainer, slot_date)
         if not intervals:
             return []
@@ -34,7 +35,7 @@ class TrainerSlotService:
         for start_at, end_at in intervals:
             existing_slot = slot_map.get((start_at, end_at))
             if existing_slot:
-                result.append(self._to_availability(existing_slot))
+                result.append(self._to_availability(existing_slot, include_booked_user))
                 continue
 
             result.append(TrainerSlotAvailability(
@@ -93,7 +94,7 @@ class TrainerSlotService:
                 continue
             self.trainer_slot_repo.create(trainer_id, start_at, end_at)
 
-        return self.get_day_slots(trainer_id, slot_date)
+        return self.get_day_slots(trainer_id, slot_date, current_user)
 
     def delete_day_slots(self, current_user: User, trainer_id: str, slot_date: date) -> TrainerSlotDayDeleteResult:
         trainer = self._get_trainer_or_404(trainer_id)
@@ -199,14 +200,36 @@ class TrainerSlotService:
             )
 
     @staticmethod
-    def _to_availability(slot: TrainerSlot) -> TrainerSlotAvailability:
+    def _to_availability(slot: TrainerSlot, include_booked_user: bool = False) -> TrainerSlotAvailability:
+        booked_user = None
+        if (
+            include_booked_user
+            and slot.booking
+            and slot.booking.status != BookingStatus.CANCELLED
+            and slot.booking.user
+        ):
+            booked_user = BookedUserShort(
+                id=slot.booking.user.id,
+                first_name=slot.booking.user.first_name,
+                last_name=slot.booking.user.last_name,
+                patronymic=slot.booking.user.patronymic
+            )
         return TrainerSlotAvailability(
             id=slot.id,
             trainer_id=slot.trainer_id,
             start_time=slot.start_time,
             end_time=slot.end_time,
-            created_at=slot.created_at
+            created_at=slot.created_at,
+            booked_user=booked_user
         )
+
+    @staticmethod
+    def _can_view_booked_user(current_user: User, trainer: Trainer) -> bool:
+        if current_user.role == "TRAINER":
+            return bool(current_user.trainer_profile and current_user.trainer_profile.id == trainer.id)
+        if current_user.role == "GYM_ADMIN":
+            return bool(current_user.gym and current_user.gym.id == trainer.gym_id)
+        return False
 
     @staticmethod
     def _get_day_schedule_or_404(trainer: Trainer, slot_date: date) -> GymSchedule:

@@ -33,6 +33,11 @@ class UserTrainerPackageRepository:
             UserTrainerPackage.id == user_trainer_package_id
         ).first()
 
+    def get_by_id_for_update(self, user_trainer_package_id: str) -> Optional[UserTrainerPackage]:
+        return self.db.query(UserTrainerPackage).filter(
+            UserTrainerPackage.id == user_trainer_package_id
+        ).with_for_update().first()
+
     def get_by_user_id_ordered(self, user_id: str) -> List[UserTrainerPackage]:
         status_order = case(
             (UserTrainerPackage.status == UserTrainerPackageStatus.ACTIVE, 0),
@@ -53,6 +58,14 @@ class UserTrainerPackageRepository:
         ).order_by(
             UserTrainerPackage.activated_at.desc()
         ).first()
+
+    def get_active_by_user_id_for_update(self, user_id: str) -> Optional[UserTrainerPackage]:
+        return self.db.query(UserTrainerPackage).filter(
+            UserTrainerPackage.user_id == user_id,
+            UserTrainerPackage.status == UserTrainerPackageStatus.ACTIVE
+        ).order_by(
+            UserTrainerPackage.activated_at.desc()
+        ).with_for_update().first()
 
     def activate(self, user_trainer_package: UserTrainerPackage, activated_at: date) -> UserTrainerPackage:
         user_trainer_package.status = UserTrainerPackageStatus.ACTIVE

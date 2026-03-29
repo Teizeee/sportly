@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.database import SessionLocal
+from app.repositories.booking_repository import BookingRepository
 from app.repositories.user_trainer_package_repository import UserTrainerPackageRepository
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,20 @@ async def _expired_trainer_packages_worker():
         await asyncio.sleep(24 * 60 * 60)
 
 
+async def _booking_status_worker():
+    while True:
+        db = SessionLocal()
+        try:
+            repo = BookingRepository(db)
+            repo.mark_past_created_as_not_visited()
+        except Exception:
+            db.rollback()
+            logger.exception("Failed to update past CREATED bookings to NOT_VISITED")
+        finally:
+            db.close()
+        await asyncio.sleep(24 * 60 * 60)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings.avatar_path.mkdir(parents=True, exist_ok=True)
@@ -38,10 +53,14 @@ async def lifespan(app: FastAPI):
     app.mount("/avatars", StaticFiles(directory=settings.avatar_path), name="avatars")
     app.mount("/gyms", StaticFiles(directory=settings.gym_path), name="gyms")
     app.state.expired_trainer_packages_worker = asyncio.create_task(_expired_trainer_packages_worker())
+    app.state.booking_status_worker = asyncio.create_task(_booking_status_worker())
     yield
     app.state.expired_trainer_packages_worker.cancel()
+    app.state.booking_status_worker.cancel()
     with contextlib.suppress(asyncio.CancelledError):
         await app.state.expired_trainer_packages_worker
+    with contextlib.suppress(asyncio.CancelledError):
+        await app.state.booking_status_worker
 
 app = FastAPI(
     title=settings.APP_NAME,

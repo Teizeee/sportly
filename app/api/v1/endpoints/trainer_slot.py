@@ -25,10 +25,10 @@ async def get_trainer_slots_by_date(
     trainer_id: str,
     slot_date: date = Query(..., alias="date"),
     db: Session = Depends(get_db),
-    _: User = Depends(dependencies.get_current_active_user)
+    current_user: User = Depends(dependencies.get_current_active_user)
 ):
     trainer_slot_service = TrainerSlotService(db)
-    return trainer_slot_service.get_day_slots(trainer_id, slot_date)
+    return trainer_slot_service.get_day_slots(trainer_id, slot_date, current_user)
 
 
 @router.post(

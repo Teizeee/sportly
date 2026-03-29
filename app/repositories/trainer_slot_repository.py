@@ -2,9 +2,9 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
-from app.models.booking import TrainerSlot
+from app.models.booking import Booking, TrainerSlot
 
 
 class TrainerSlotRepository:
@@ -38,7 +38,17 @@ class TrainerSlotRepository:
             TrainerSlot.start_time >= range_start,
             TrainerSlot.start_time < range_end,
             TrainerSlot.deleted_at.is_(None)
+        ).options(
+            joinedload(TrainerSlot.booking).joinedload(Booking.user)
         ).order_by(TrainerSlot.start_time.asc()).all()
+
+    def get_by_ids(self, slot_ids: List[str]) -> List[TrainerSlot]:
+        if not slot_ids:
+            return []
+        return self.db.query(TrainerSlot).filter(
+            TrainerSlot.id.in_(slot_ids),
+            TrainerSlot.deleted_at.is_(None)
+        ).all()
 
     def create(self, trainer_id: str, start_time: datetime, end_time: datetime) -> TrainerSlot:
         slot = TrainerSlot(
