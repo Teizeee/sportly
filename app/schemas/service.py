@@ -2,7 +2,7 @@ from decimal import Decimal
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.service import ClientMembershipStatus, UserTrainerPackageStatus
 from app.schemas.user import GetTrainer
@@ -16,6 +16,7 @@ class MembershipTypeBase(BaseModel):
 
 class MembershipTypeModel(MembershipTypeBase):
     id: str = Field(..., min_length=1, max_length=36)
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TrainerPackageBase(BaseModel):
@@ -29,6 +30,7 @@ class TrainerPackageBase(BaseModel):
 class TrainerPackageModel(TrainerPackageBase):
     id: str = Field(..., min_length=1, max_length=36)
     trainer: GetTrainer = None
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ClientMembershipCreate(BaseModel):
@@ -42,6 +44,7 @@ class ClientMembershipModel(ClientMembershipCreate):
     purchased_at: date
     activated_at: Optional[date] = None
     expires_at: Optional[date] = None
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserTrainerPackageCreate(BaseModel):
@@ -56,3 +59,9 @@ class UserTrainerPackageModel(UserTrainerPackageCreate):
     purchased_at: date
     activated_at: Optional[date] = None
     expires_at: Optional[date] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ActiveClientServicesModel(BaseModel):
+    active_membership: Optional[ClientMembershipModel] = None
+    active_package: Optional[UserTrainerPackageModel] = None
