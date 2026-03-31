@@ -57,6 +57,7 @@ class UsersCount(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    role: UserRole
 
 
 class TokenData(BaseModel):

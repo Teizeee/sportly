@@ -75,7 +75,8 @@ class AuthService:
 
         return {
             "access_token": access_token,
-            "token_type": "bearer"
+            "token_type": "bearer",
+            "role": user.role.value
         }
 
     def get_current_user(self, user_id: str) -> User:
