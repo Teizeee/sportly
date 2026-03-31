@@ -13,7 +13,7 @@ class TrainerReview(Base):
     trainer_id = Column(String(36), ForeignKey("trainer.id"), nullable=False)
     rating = Column(SmallInteger, nullable=False)
     comment = Column(String(255), nullable=True)
-    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    created_at = Column(DateTime, nullable=False, default=func.now(), server_default=func.now())
     deleted_at = Column(DateTime, nullable=True)
 
     user = relationship("User", uselist=False)
@@ -31,7 +31,7 @@ class GymReview(Base):
     gym_id = Column(String(36), ForeignKey("gym.id"), nullable=False)
     rating = Column(SmallInteger, nullable=False)
     comment = Column(String(255), nullable=True)
-    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    created_at = Column(DateTime, nullable=False, default=func.now(), server_default=func.now())
     deleted_at = Column(DateTime, nullable=True)
 
     user = relationship("User", uselist=False)

@@ -27,7 +27,7 @@ class GymApplication(Base):
     phone = Column(String(255), nullable=False)
     status = Column(Enum(GymApplicationStatus), nullable=False)
     comment = Column(String(255), nullable=True)  # комментарий от суперадмина
-    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    created_at = Column(DateTime, nullable=False, default=func.now(), server_default=func.now())
     gym_admin_id = Column(String(36), ForeignKey("user.id"), nullable=False)
 
     gym_admin = relationship("User", back_populates="gym_application", uselist=False)
@@ -42,7 +42,7 @@ class Gym(Base):
 
     id = Column(String(36), primary_key=True, index=True, unique=True)
     gym_application_id = Column(String(36), ForeignKey("gym_application.id"), nullable=False, unique=True)
-    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    created_at = Column(DateTime, nullable=False, default=func.now(), server_default=func.now())
     status = Column(Enum(GymStatus), nullable=False)
 
     gym_application = relationship("GymApplication", back_populates="gym", uselist=False)
@@ -102,7 +102,7 @@ class GymBlocking(Base):
     id = Column(String(36), primary_key=True, index=True, unique=True)
     user_id = Column(String(36), ForeignKey("user.id"), nullable=False)
     gym_id = Column(String(36), ForeignKey("gym.id"), nullable=False)
-    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    created_at = Column(DateTime, nullable=False, default=func.now(), server_default=func.now())
     comment = Column(String(255), nullable=True)
 
     user = relationship("User", back_populates="gym_blockings", uselist=False)
@@ -110,3 +110,4 @@ class GymBlocking(Base):
 
     def __repr__(self):
         return f"<GymBlocking {self.id} user={self.user_id} gym={self.gym_id}>"
+

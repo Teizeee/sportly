@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `user` (
 	`email` VARCHAR(255) NOT NULL UNIQUE,
 	`password` VARCHAR(255) NOT NULL,
 	`birth_date` DATE,
-	`created_at` DATETIME NOT NULL,
+	`created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`blocked_at` DATETIME, -- если пользователя заблокирует суперадмин, то сохранится время и причина блокировки
 	`blocked_comment` VARCHAR(255),
 	`deleted_at` DATETIME,
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS `gym_blocking` (
 	`id` VARCHAR(36) NOT NULL UNIQUE,
 	`user_id` VARCHAR(36) NOT NULL,
 	`gym_id` VARCHAR(36) NOT NULL,
-	`created_at` DATETIME NOT NULL,
+	`created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`comment` VARCHAR(255),
 	PRIMARY KEY(`id`)
 ) COMMENT='блокировка пользователя администратором зала';
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS `trainer_slot` (
 	`trainer_id` VARCHAR(36) NOT NULL,
 	`start_time` DATETIME NOT NULL,
 	`end_time` DATETIME NOT NULL,
-	`created_at` DATETIME NOT NULL,
+	`created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`deleted_at` DATETIME,
 	PRIMARY KEY(`id`)
 );
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS `booking` (
 	`trainer_slot_id` VARCHAR(36) NOT NULL,
 	`user_trainer_package_id` VARCHAR(36) NOT NULL,
 	`status` ENUM('CREATED','CANCELLED','VISITED','NOT_VISITED') NOT NULL,
-	`created_at` DATETIME NOT NULL,
+	`created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY(`id`)
 );
 
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS `trainer_review` (
 	`trainer_id` VARCHAR(36) NOT NULL,
 	`rating` TINYINT NOT NULL,
 	`comment` VARCHAR(255),
-	`created_at` DATETIME NOT NULL,
+	`created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`deleted_at` DATETIME,
 	PRIMARY KEY(`id`)
 );
@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS `gym_review` (
 	`gym_id` VARCHAR(36) NOT NULL,
 	`rating` TINYINT NOT NULL,
 	`comment` VARCHAR(255),
-	`created_at` DATETIME NOT NULL,
+	`created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`deleted_at` DATETIME,
 	PRIMARY KEY(`id`)
 );
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS `gym_application` (
 	`phone` VARCHAR(255) NOT NULL,
 	`status` ENUM('APPROVED', 'REJECTED', 'ON_MODERATION') NOT NULL,
 	`comment` VARCHAR(255), -- комментарий от суперадмина если он отклоняет заявку или блокирует зал
-	`created_at` DATETIME NOT NULL,
+	`created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`gym_admin_id` VARCHAR(36) NOT NULL,
 	PRIMARY KEY(`id`)
 ) COMMENT='привязана к пользователю с ролью gym_admin';
@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS `gym_application` (
 CREATE TABLE IF NOT EXISTS `gym` (
 	`id` VARCHAR(36) NOT NULL UNIQUE,
 	`gym_application_id` VARCHAR(36) NOT NULL, -- вся информация о зале берется из принятой заявки
-	`created_at` DATETIME NOT NULL,
+	`created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`status` ENUM('ACTIVE', 'BLOCKED') NOT NULL, -- переходит в статус BLOCKED если суперадмин лично заблокировал зал
 	PRIMARY KEY(`id`)
 ) COMMENT='зал создается только когда заявка принята и вся инфа о зале берется из самой заявки (поэтому зал привязан к заявке)';
@@ -378,3 +378,4 @@ VALUES('33333333-3333-2222-2222-222222222208', '22222222-2222-2222-2222-22222222
 ('33333333-3333-2222-2222-222222222212', '22222222-2222-2222-2222-222222222203', 4, '08:00:00', '21:00:00'),
 ('33333333-3333-2222-2222-222222222213', '22222222-2222-2222-2222-222222222203', 5, '08:00:00', '21:00:00'),
 ('33333333-3333-2222-2222-222222222214', '22222222-2222-2222-2222-222222222203', 6, '08:00:00', '21:00:00');
+

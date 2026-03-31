@@ -27,7 +27,7 @@ class User(Base):
     email = Column(String(255), nullable=False, unique=True, index=True)
     password = Column(String(255), nullable=False)
     birth_date = Column(Date, nullable=True)
-    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    created_at = Column(DateTime, nullable=False, default=func.now(), server_default=func.now())
     blocked_at = Column(DateTime, nullable=True)
     blocked_comment = Column(String(255), nullable=True)
     deleted_at = Column(DateTime, nullable=True)
