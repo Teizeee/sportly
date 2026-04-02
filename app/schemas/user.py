@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 from app.models.user import UserRole
 
@@ -41,6 +41,16 @@ class GetUserWithId(UserBase):
 
 class GetUserTrainer(GetUserWithId):
     trainer_profile: Optional[TrainerBase] = None
+    blocked_at: Optional[datetime] = None
+
+
+class TrainerBaseWithPassword(TrainerBase):
+    password: Optional[str] = Field(None, min_length=1, max_length=255)
+
+
+class GetUserTrainerWithPassword(GetUserWithId):
+    trainer_profile: Optional[TrainerBaseWithPassword] = None
+    blocked_at: Optional[datetime] = None
 
 class GetTrainer(TrainerBase):
     user: GetUserWithId = None

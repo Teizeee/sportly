@@ -9,7 +9,6 @@ from app.schemas.user import AvatarResponse, GetUserTrainer
 
 class UserResponse(GetUserTrainer):
     created_at: datetime
-    blocked_at: Optional[datetime] = None
     blocked_comment: Optional[str] = None
     deleted_at: Optional[datetime] = None
 

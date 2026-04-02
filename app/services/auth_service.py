@@ -4,7 +4,15 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from app.repositories.user_repository import UserRepository
-from app.schemas.user import UserCreate, UserLogin, UserUpdate, UserBlock, PasswordChange, UsersCount
+from app.schemas.user import (
+    GetUserTrainerWithPassword,
+    UserCreate,
+    UserLogin,
+    UserUpdate,
+    UserBlock,
+    PasswordChange,
+    UsersCount,
+)
 from app.core.security import verify_password, get_password_hash, create_access_token
 from app.models.user import User, UserRole
 
@@ -41,7 +49,7 @@ class AuthService:
 
         return user
 
-    def login(self, login_data: UserLogin) -> dict:
+    def login(self, login_data: UserLogin, subsystem: str) -> dict:
         user = self.user_repo.get_by_email(login_data.email)
 
         if not user:
@@ -66,6 +74,25 @@ class AuthService:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password"
+            )
+
+        normalized_subsystem = subsystem.lower()
+        if normalized_subsystem not in {"web", "mobile"}:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Invalid Subsystem header. Allowed values: "web" or "mobile"'
+            )
+
+        if normalized_subsystem == "web" and user.role not in {UserRole.SUPER_ADMIN, UserRole.GYM_ADMIN}:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Web login is allowed only for SUPER_ADMIN and GYM_ADMIN"
+            )
+
+        if normalized_subsystem == "mobile" and user.role not in {UserRole.CLIENT, UserRole.TRAINER}:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Mobile login is allowed only for CLIENT and TRAINER"
             )
 
         access_token = create_access_token(
@@ -101,8 +128,8 @@ class AuthService:
         current_user: User,
         gym_id: Optional[str],
         role: Optional[UserRole],
-        is_blocked: Optional[bool]
-    ) -> List[User]:
+        include_blocked: Optional[bool]
+    ) -> List[GetUserTrainerWithPassword]:
         if current_user.role == "GYM_ADMIN":
             if current_user.gym.id != gym_id or role in ["GYM_ADMIN", "SUPER_ADMIN"]:
                 raise HTTPException(
@@ -110,9 +137,14 @@ class AuthService:
                     detail="Not enough permissions"
                 )
 
-        return self.user_repo.get_all(
-            gym_id, role, is_blocked
+        users = self.user_repo.get_all(
+            gym_id, role, include_blocked
         )
+
+        return [
+            self._serialize_user_for_user_list(current_user, user)
+            for user in users
+        ]
     
     def users_count(self) -> UsersCount:
         stats = self.user_repo.get_count()
@@ -131,12 +163,13 @@ class AuthService:
                 detail="User not found"
             )
 
-        existing_user = self.user_repo.get_by_email(update_data.email)
-        if existing_user.id != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already in use"
-            )
+        if update_data.email is not None:
+            existing_user = self.user_repo.get_by_email(update_data.email)
+            if existing_user and existing_user.id != user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Email already in use"
+                )
 
         return self.user_repo.update(user, update_data)
 
@@ -208,3 +241,23 @@ class AuthService:
 
         self.user_repo.delete(target_user)
         return True
+
+    def _serialize_user_for_user_list(self, current_user: User, user: User) -> GetUserTrainerWithPassword:
+        serialized = GetUserTrainerWithPassword.model_validate(user, from_attributes=True)
+
+        if serialized.trainer_profile and not self._can_view_trainer_password(current_user, user):
+            serialized.trainer_profile.password = None
+
+        return serialized
+
+    def _can_view_trainer_password(self, current_user: User, target_user: User) -> bool:
+        if target_user.role != UserRole.TRAINER or not target_user.trainer_profile:
+            return False
+
+        if current_user.role == UserRole.SUPER_ADMIN:
+            return True
+
+        if current_user.role == UserRole.GYM_ADMIN and current_user.gym:
+            return target_user.trainer_profile.gym_id == current_user.gym.id
+
+        return False

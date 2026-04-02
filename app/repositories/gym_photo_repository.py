@@ -1,5 +1,3 @@
-import uuid
-
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -12,7 +10,6 @@ class GymPhotoRepository:
 
     def create(self, gym_id: str, link: str) -> GymPhoto:
         gym_photo = GymPhoto(
-            id = uuid.uuid4(),
             gym_id = gym_id,
             link = link
         )
@@ -21,8 +18,8 @@ class GymPhotoRepository:
         self.db.refresh(gym_photo)
         return gym_photo
 
-    def get_by_id(self, id: str) -> Optional[GymPhoto]:
-        return self.db.query(GymPhoto).filter(GymPhoto.id == id).first()
+    def get_by_id(self, gym_id: str) -> Optional[GymPhoto]:
+        return self.db.query(GymPhoto).filter(GymPhoto.gym_id == gym_id).first()
 
     def update(self, gym_photo: GymPhoto, link: str) -> GymPhoto:
         gym_photo.link = link

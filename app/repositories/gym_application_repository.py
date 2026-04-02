@@ -1,7 +1,7 @@
 from typing import List, Optional
 import uuid
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.gym import GymApplication, GymApplicationStatus
 from app.schemas.gym import BaseGymApplication
@@ -27,7 +27,12 @@ class GymApplicationRepository:
         return gym_application
     
     def get_all(self) -> List[GymApplication]:
-        return self.db.query(GymApplication).filter(GymApplication.status == GymApplicationStatus.ON_MODERATION).all()
+        return (
+            self.db.query(GymApplication)
+            .options(joinedload(GymApplication.gym_admin))
+            .filter(GymApplication.status == GymApplicationStatus.ON_MODERATION)
+            .all()
+        )
 
     def get_by_id(self, application_id: str) -> Optional[GymApplication]:
         return self.db.query(GymApplication).filter(GymApplication.id == application_id).first()

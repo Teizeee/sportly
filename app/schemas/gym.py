@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from datetime import date, time
+from datetime import date, datetime, time
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.gym import GymApplicationStatus, GymStatus
 from app.schemas.service import MembershipTypeModel, TrainerPackageModel
@@ -26,10 +26,15 @@ class BlockGym(BaseModel):
     comment: str = Field(..., min_length=1, max_length=255)
 
 
+class GymPhotoModel(BaseModel):
+    link: str = Field(..., min_length=1, max_length=255)
+
+
 class GetGym(BaseModel):
     id: str = Field(..., min_length=1, max_length=36)
     status: GymStatus = GymStatus.ACTIVE
     rating: Optional[float] = Field(default=None, ge=1, le=5)
+    photo: Optional[GymPhotoModel] = None
     gym_application: GetGymApplication = None
     schedule: List[GymScheduleModel] = []
     subscription: Optional[Subscription] = None
@@ -39,6 +44,24 @@ class GetGym(BaseModel):
 class GetGymApplication(BaseGymApplication):
     id: str = Field(..., min_length=1, max_length=36)
     status: GymApplicationStatus = GymApplicationStatus.ON_MODERATION
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class GetGymApplicationAdmin(BaseModel):
+    id: str = Field(..., min_length=1, max_length=36)
+    last_name: str = Field(..., min_length=1, max_length=255)
+    first_name: str = Field(..., min_length=1, max_length=255)
+    patronymic: Optional[str] = Field(None, max_length=255)
+    email: str = Field(..., min_length=1, max_length=255)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class GetGymApplicationWithAdmin(GetGymApplication):
+    gym_admin: GetGymApplicationAdmin
+
+    model_config = ConfigDict(from_attributes=True)
 
 class GymScheduleModel(BaseModel):
     id: str = Field(..., min_length=1, max_length=36)

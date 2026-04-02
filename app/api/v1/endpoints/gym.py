@@ -7,7 +7,15 @@ from sqlalchemy.orm import Session
 from app.api import dependencies
 from app.core.database import get_db
 from app.models.user import User
-from app.schemas.gym import ApproveGymApplication, BaseGymApplication, BlockGym, GetGym, RejectGymApplication, UpdateGym
+from app.schemas.gym import (
+    ApproveGymApplication,
+    BaseGymApplication,
+    BlockGym,
+    GetGym,
+    GetGymApplicationWithAdmin,
+    RejectGymApplication,
+    UpdateGym,
+)
 from app.schemas.user import GetTrainer
 from app.services.gym_blocking_service import GymBlockingService
 from app.services.gym_photo_service import GymPhotoService
@@ -16,7 +24,12 @@ from app.services.services_service import ServicesService
 
 router = APIRouter()
 
-@router.get("/applications", status_code=status.HTTP_200_OK)
+@router.get(
+    "/applications",
+    status_code=status.HTTP_200_OK,
+    response_model=List[GetGymApplicationWithAdmin],
+    response_model_exclude_none=True
+)
 async def applications(
     db: Session = Depends(get_db),
     _: User = Depends(dependencies.require_super_admin)
@@ -49,11 +62,15 @@ async def get_gyms(
     gym_service = GymService(db)
     gyms = gym_service.get_gyms(name=name, city=city, min_rating=rating)
 
-    if current_user.role != "SUPER_ADMIN":
+    is_super_admin = current_user.role == "SUPER_ADMIN"
+
+    if not is_super_admin:
         today = date.today()
         gyms = [
             gym for gym in gyms
-            if gym.subscription and gym.subscription.start_date <= today <= gym.subscription.end_date
+            if gym.is_active
+            and gym.subscription
+            and gym.subscription.start_date <= today <= gym.subscription.end_date
         ]
         for gym in gyms:
             gym.subscription = None
@@ -168,13 +185,12 @@ async def upload_gym_photo(
     return await gym_photo_service.upload_photo(current_user, gym_id, file)
 
 
-@router.delete("/{gym_id}/photos/{gym_photo_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{gym_id}/photos", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_gym_photo(
     gym_id: str,
-    gym_photo_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(dependencies.require_admin)
 ):
     gym_photo_service = GymPhotoService(db)
-    gym_photo_service.delete_photo(current_user, gym_id, gym_photo_id)
+    gym_photo_service.delete_photo(current_user, gym_id)
     return None

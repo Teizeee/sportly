@@ -1,5 +1,3 @@
-import uuid
-
 from sqlalchemy.orm import Session
 from fastapi import File, HTTPException, status
 
@@ -17,18 +15,21 @@ class GymPhotoService:
 
     async def upload_photo(self, user: User, gym_id: str, file: File) -> str:
         if user.role == "SUPER_ADMIN" or user.gym.id == gym_id:
-            filename = await self.file_service.save_file(file, uuid.uuid4())
+            filename = await self.file_service.save_file(file, gym_id)
+            gym_photo = self.gym_photo_repo.get_by_id(gym_id)
+            if gym_photo:
+                return self.gym_photo_repo.update(gym_photo, f"/gyms/{filename}").link
             return self.gym_photo_repo.create(gym_id, f"/gyms/{filename}").link
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions"
         )
 
-    def delete_photo(self, user: User, gym_id: str, gym_photo_id: str):
+    def delete_photo(self, user: User, gym_id: str):
         if user.role == "SUPER_ADMIN" or user.gym.id == gym_id:
-            gym = self.gym_photo_repo.get_by_id(gym_photo_id)
-            if gym:
-                self.gym_photo_repo.delete(gym)
+            gym_photo = self.gym_photo_repo.get_by_id(gym_id)
+            if gym_photo:
+                self.gym_photo_repo.delete(gym_photo)
                 return
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

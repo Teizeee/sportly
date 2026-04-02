@@ -1,12 +1,12 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Header, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import dependencies
 from app.core.database import get_db
 from app.schemas.user import (
-    GetUserTrainer, UserCreate, UserLogin,
+    GetUserTrainerWithPassword, UserCreate, UserLogin,
     TokenResponse, UserUpdate, UserBlock, PasswordChange
 )
 from app.schemas.user_profile import UserResponse
@@ -29,10 +29,11 @@ async def register(
 @router.post("/login", response_model=TokenResponse)
 async def login(
     login_data: UserLogin,
+    subsystem: str = Header(..., alias="Subsystem"),
     db: Session = Depends(get_db)
 ):
     auth_service = AuthService(db)
-    return auth_service.login(login_data)
+    return auth_service.login(login_data, subsystem)
 
 
 @router.get("/me", response_model=UserResponse, response_model_exclude_none=True)
@@ -73,16 +74,16 @@ async def delete_own_account(
     return None
 
 
-@router.get("/users", response_model=List[GetUserTrainer], response_model_exclude_none=True)
+@router.get("/users", response_model=List[GetUserTrainerWithPassword], response_model_exclude_none=True)
 async def get_users(
     gym_id: Optional[str] = Query(None, description="Filter users by gym"),
     role: Optional[UserRole] = Query(None, description="Filter users by role"),
-    is_blocked: Optional[bool] = Query(None, description="Filter blocked users"),
+    include_blocked: Optional[bool] = Query(None, description="Filter blocked users"),
     current_user: User = Depends(dependencies.require_admin),
     db: Session = Depends(get_db)
 ):
     auth_service = AuthService(db)
-    return auth_service.get_users(current_user, gym_id, role, is_blocked)
+    return auth_service.get_users(current_user, gym_id, role, include_blocked)
 
 
 @router.get("/users/count")

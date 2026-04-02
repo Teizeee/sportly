@@ -54,7 +54,7 @@ class UserRepository:
             self,
             gym_id: Optional[str] = None,
             role: Optional[UserRole] = None,
-            is_blocked: Optional[bool] = None
+            include_blocked: Optional[bool] = None
     ) -> List[User]:
         query = self.db.query(User).filter(User.deleted_at.is_(None))
 
@@ -89,15 +89,15 @@ class UserRepository:
                         )
                     )
 
-        if is_blocked is not None:
+        if include_blocked is False:
             if gym_id:
                 gym_blocking_exists = exists().where(
                     (GymBlocking.user_id == User.id) &
                     (GymBlocking.gym_id == gym_id)
                 )
-                query = query.filter(gym_blocking_exists if is_blocked else ~gym_blocking_exists)
+                query = query.filter(~gym_blocking_exists)
             else:
-                query = query.filter(User.blocked_at.is_not(None) if is_blocked else User.blocked_at.is_(None))
+                query = query.filter(User.blocked_at.is_(None))
 
         return query.all()
     
@@ -112,8 +112,18 @@ class UserRepository:
         ).first()
 
     def update(self, user: User, update_data: UserUpdate) -> User:
-        for field, value in update_data.model_dump(exclude_unset=True).items():
-            setattr(user, field, value)
+        update_values = update_data.model_dump(exclude_unset=True)
+
+        user_fields = {"first_name", "last_name", "patronymic", "birth_date", "email"}
+        for field in user_fields:
+            if field in update_values:
+                setattr(user, field, update_values[field])
+
+        if user.role == UserRole.TRAINER and user.trainer_profile:
+            trainer_fields = {"phone", "description", "password"}
+            for field in trainer_fields:
+                if field in update_values and update_values[field] is not None:
+                    setattr(user.trainer_profile, field, update_values[field])
 
         self.db.commit()
         self.db.refresh(user)
