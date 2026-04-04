@@ -85,6 +85,7 @@ class GymService:
         self.gym_repo.update_schedule(gym, update_gym_data.schedule)
         if current_user.role == "SUPER_ADMIN":
             self.subscription_service.gym_subscription_repo.update(gym.subscription, update_gym_data.subscription.end_date)
+        return gym
     
     def block_gym(self, gym_id: str, comment: str) -> Gym:
         gym = self.gym_repo.get_by_id(gym_id)

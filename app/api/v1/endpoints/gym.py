@@ -119,7 +119,7 @@ async def reject_application(
     return gym_service.reject_application(application_id, reject_gym_application)
 
 
-@router.post("/{gym_id}", response_model=GetGym, status_code=status.HTTP_200_OK)
+@router.put("/{gym_id}", response_model=GetGym, status_code=status.HTTP_200_OK)
 async def update_gym(
     gym_id: str,
     update_gym_data: UpdateGym,
