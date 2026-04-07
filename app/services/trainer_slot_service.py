@@ -220,6 +220,8 @@ class TrainerSlotService:
             start_time=slot.start_time,
             end_time=slot.end_time,
             created_at=slot.created_at,
+            booking_id=slot.booking.id if slot.booking else None,
+            booking_status=slot.booking.status if slot.booking else None,
             booked_user=booked_user
         )
 

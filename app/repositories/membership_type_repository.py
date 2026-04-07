@@ -26,6 +26,7 @@ class MembershipTypeRepository:
             price=membership_type_data.price,
             duration_months=membership_type_data.duration_months
         )
+        self.db.add(membership_type)
         self.db.commit()
         self.db.refresh(membership_type)
         return membership_type

@@ -3,6 +3,8 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from app.models.booking import BookingStatus
+
 
 class TrainerSlotCreate(BaseModel):
     start_time: datetime
@@ -22,6 +24,8 @@ class TrainerSlotAvailability(BaseModel):
     start_time: datetime
     end_time: datetime
     created_at: Optional[datetime] = None
+    booking_id: Optional[str] = Field(None, min_length=1, max_length=36)
+    booking_status: Optional[BookingStatus] = None
     booked_user: Optional[BookedUserShort] = None
 
 

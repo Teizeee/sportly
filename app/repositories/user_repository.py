@@ -1,5 +1,5 @@
 from sqlalchemy import case, exists, func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from datetime import datetime, timezone
 from typing import Optional, List
 import uuid
@@ -8,6 +8,7 @@ from app.models.gym import Gym, GymApplication, GymBlocking
 from app.models.service import ClientMembership, MembershipType
 from app.models.user import User, UserRole
 from app.models.trainer import Trainer
+from app.core.security import get_password_hash
 from app.schemas.user import UserCreate, UserUpdate, UserBlock
 
 
@@ -57,6 +58,9 @@ class UserRepository:
             include_blocked: Optional[bool] = None
     ) -> List[User]:
         query = self.db.query(User).filter(User.deleted_at.is_(None))
+
+        if gym_id and role == UserRole.CLIENT and include_blocked is True:
+            query = query.options(selectinload(User.gym_blockings))
 
         if role:
             query = query.filter(User.role == role)
@@ -124,6 +128,8 @@ class UserRepository:
             for field in trainer_fields:
                 if field in update_values and update_values[field] is not None:
                     setattr(user.trainer_profile, field, update_values[field])
+                    if field == "password":
+                        user.password = get_password_hash(update_values[field])
 
         self.db.commit()
         self.db.refresh(user)
@@ -153,8 +159,16 @@ class UserRepository:
         self.db.refresh(user)
         return user
 
-    def update_password(self, user: User, new_hashed_password: str) -> User:
+    def update_password(self, user: User, new_hashed_password: str, new_raw_password: Optional[str] = None) -> User:
         user.password = new_hashed_password
+
+        if (
+            user.role == UserRole.TRAINER and
+            user.trainer_profile and
+            new_raw_password is not None
+        ):
+            user.trainer_profile.password = new_raw_password
+
         self.db.commit()
         self.db.refresh(user)
         return user

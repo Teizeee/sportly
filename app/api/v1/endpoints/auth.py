@@ -18,11 +18,12 @@ router = APIRouter()
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED, response_model_exclude_none=True)
 async def register(
     user_data: UserCreate,
+    subsystem: str = Header(..., alias="Subsystem"),
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(dependencies.get_current_user_optional)
 ):
     auth_service = AuthService(db)
-    user = auth_service.register(current_user, user_data)
+    user = auth_service.register(current_user, user_data, subsystem)
     return user
 
 
@@ -120,11 +121,11 @@ async def unblock_user(
 async def update_profile(
     user_id: str,
     update_data: UserUpdate,
-    _: User = Depends(dependencies.require_super_admin),
+    current_user: User = Depends(dependencies.require_admin),
     db: Session = Depends(get_db)
 ):
     auth_service = AuthService(db)
-    return auth_service.update_profile(user_id, update_data)
+    return auth_service.update_user_by_admin(current_user, user_id, update_data)
 
 
 @router.delete("/users/{user_id}")

@@ -1,9 +1,9 @@
 from datetime import date
 import uuid
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from sqlalchemy import case
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.service import ClientMembership, ClientMembershipStatus, MembershipType
 
@@ -52,6 +52,33 @@ class ClientMembershipRepository:
         ).order_by(
             ClientMembership.activated_at.desc()
         ).first()
+
+    def get_active_by_user_ids_for_gym(
+        self,
+        user_ids: List[str],
+        gym_id: str
+    ) -> Dict[str, ClientMembership]:
+        if not user_ids:
+            return {}
+
+        active_memberships = self.db.query(ClientMembership).join(
+            MembershipType, MembershipType.id == ClientMembership.membership_type_id
+        ).options(
+            joinedload(ClientMembership.membership_type)
+        ).filter(
+            ClientMembership.user_id.in_(user_ids),
+            ClientMembership.status == ClientMembershipStatus.ACTIVE,
+            MembershipType.gym_id == gym_id
+        ).order_by(
+            ClientMembership.user_id.asc(),
+            ClientMembership.activated_at.desc()
+        ).all()
+
+        result: Dict[str, ClientMembership] = {}
+        for membership in active_memberships:
+            if membership.user_id not in result:
+                result[membership.user_id] = membership
+        return result
 
     def has_active_membership_for_gym(self, user_id: str, gym_id: str) -> bool:
         return self.db.query(ClientMembership).join(

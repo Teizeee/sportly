@@ -23,6 +23,7 @@ class GymReviewModel(BaseModel):
     rating: int = Field(..., ge=1, le=5)
     comment: Optional[str] = Field(None, max_length=255)
     created_at: datetime
+    author: "ReviewUserInfo"
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -34,6 +35,7 @@ class TrainerReviewModel(BaseModel):
     rating: int = Field(..., ge=1, le=5)
     comment: Optional[str] = Field(None, max_length=255)
     created_at: datetime
+    author: "ReviewUserInfo"
 
     model_config = ConfigDict(from_attributes=True)
 

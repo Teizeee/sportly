@@ -30,6 +30,7 @@ class TrainerPackageRepository:
             price=trainer_package_data.price,
             description=trainer_package_data.description
         )
+        self.db.add(trainer_package)
         self.db.commit()
         self.db.refresh(trainer_package)
         return trainer_package

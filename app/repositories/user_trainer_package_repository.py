@@ -1,12 +1,13 @@
 from datetime import date
 import uuid
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import case
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
-from app.models.service import UserTrainerPackage, UserTrainerPackageStatus
+from app.models.service import TrainerPackage, UserTrainerPackage, UserTrainerPackageStatus
+from app.models.trainer import Trainer
 
 
 class UserTrainerPackageRepository:
@@ -58,6 +59,37 @@ class UserTrainerPackageRepository:
         ).order_by(
             UserTrainerPackage.activated_at.desc()
         ).first()
+
+    def get_active_by_user_ids_for_gym(
+        self,
+        user_ids: List[str],
+        gym_id: str
+    ) -> Dict[str, UserTrainerPackage]:
+        if not user_ids:
+            return {}
+
+        active_packages = self.db.query(UserTrainerPackage).join(
+            TrainerPackage, TrainerPackage.id == UserTrainerPackage.trainer_package_id
+        ).join(
+            Trainer, Trainer.id == TrainerPackage.trainer_id
+        ).options(
+            joinedload(UserTrainerPackage.trainer_package)
+            .joinedload(TrainerPackage.trainer)
+            .joinedload(Trainer.user)
+        ).filter(
+            UserTrainerPackage.user_id.in_(user_ids),
+            UserTrainerPackage.status == UserTrainerPackageStatus.ACTIVE,
+            Trainer.gym_id == gym_id
+        ).order_by(
+            UserTrainerPackage.user_id.asc(),
+            UserTrainerPackage.activated_at.desc()
+        ).all()
+
+        result: Dict[str, UserTrainerPackage] = {}
+        for package in active_packages:
+            if package.user_id not in result:
+                result[package.user_id] = package
+        return result
 
     def get_active_by_user_id_for_update(self, user_id: str) -> Optional[UserTrainerPackage]:
         return self.db.query(UserTrainerPackage).filter(

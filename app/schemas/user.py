@@ -2,6 +2,7 @@ from pydantic import BaseModel, EmailStr, Field
 from datetime import date, datetime
 from typing import Optional
 from app.models.user import UserRole
+from app.models.service import ClientMembershipStatus, UserTrainerPackageStatus
 
 
 class UserBase(BaseModel):
@@ -48,9 +49,37 @@ class TrainerBaseWithPassword(TrainerBase):
     password: Optional[str] = Field(None, min_length=1, max_length=255)
 
 
+class ActiveClientMembership(BaseModel):
+    id: str = Field(..., min_length=1, max_length=36)
+    user_id: str = Field(..., min_length=1, max_length=36)
+    membership_type_id: str = Field(..., min_length=1, max_length=36)
+    membership_type_name: str = Field(..., min_length=1, max_length=255)
+    status: ClientMembershipStatus
+    purchased_at: date
+    activated_at: Optional[date] = None
+    expires_at: Optional[date] = None
+
+
+class ActiveUserTrainerPackage(BaseModel):
+    id: str = Field(..., min_length=1, max_length=36)
+    user_id: str = Field(..., min_length=1, max_length=36)
+    trainer_package_id: str = Field(..., min_length=1, max_length=36)
+    trainer_package_name: str = Field(..., min_length=1, max_length=255)
+    trainer_package_session_count: int = Field(..., ge=1)
+    trainer_first_name: str = Field(..., min_length=1, max_length=255)
+    trainer_last_name: str = Field(..., min_length=1, max_length=255)
+    trainer_patronymic: Optional[str] = Field(None, max_length=255)
+    status: UserTrainerPackageStatus
+    sessions_left: int = Field(..., ge=0)
+    purchased_at: date
+    activated_at: Optional[date] = None
+
+
 class GetUserTrainerWithPassword(GetUserWithId):
     trainer_profile: Optional[TrainerBaseWithPassword] = None
     blocked_at: Optional[datetime] = None
+    active_membership: Optional[ActiveClientMembership] = None
+    active_package: Optional[ActiveUserTrainerPackage] = None
 
 class GetTrainer(TrainerBase):
     user: GetUserWithId = None

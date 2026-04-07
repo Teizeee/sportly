@@ -66,7 +66,9 @@ class ReviewRepository:
         return review
 
     def get_gym_reviews(self, gym_id: str) -> List[GymReview]:
-        return self.db.query(GymReview).filter(
+        return self.db.query(GymReview).options(
+            joinedload(GymReview.user)
+        ).filter(
             GymReview.gym_id == gym_id,
             GymReview.deleted_at.is_(None)
         ).order_by(
@@ -74,7 +76,9 @@ class ReviewRepository:
         ).all()
 
     def get_trainer_reviews(self, trainer_id: str) -> List[TrainerReview]:
-        return self.db.query(TrainerReview).filter(
+        return self.db.query(TrainerReview).options(
+            joinedload(TrainerReview.user)
+        ).filter(
             TrainerReview.trainer_id == trainer_id,
             TrainerReview.deleted_at.is_(None)
         ).order_by(

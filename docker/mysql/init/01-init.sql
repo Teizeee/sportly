@@ -509,22 +509,22 @@ INSERT INTO `trainer_slot` (`id`, `trainer_id`, `start_time`, `end_time`, `creat
 VALUES (
     'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb01',
     '66666666-6666-6666-6666-666666666601',
-    DATE_SUB(NOW(), INTERVAL 3 HOUR),
-    DATE_SUB(NOW(), INTERVAL 2 HOUR),
+    DATE_ADD(CURDATE(), INTERVAL 8 HOUR),
+    DATE_ADD(CURDATE(), INTERVAL 9 HOUR),
     NOW(),
     NULL
 ), (
     'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb02',
     '66666666-6666-6666-6666-666666666601',
-    DATE_ADD(NOW(), INTERVAL 2 HOUR),
-    DATE_ADD(NOW(), INTERVAL 3 HOUR),
+    DATE_ADD(CURDATE(), INTERVAL 9 HOUR),
+    DATE_ADD(CURDATE(), INTERVAL 10 HOUR),
     NOW(),
     NULL
 ), (
     'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb03',
     '66666666-6666-6666-6666-666666666601',
-    DATE_ADD(NOW(), INTERVAL 4 HOUR),
-    DATE_ADD(NOW(), INTERVAL 5 HOUR),
+    DATE_ADD(CURDATE(), INTERVAL 10 HOUR),
+    DATE_ADD(CURDATE(), INTERVAL 11 HOUR),
     NOW(),
     NULL
 );
