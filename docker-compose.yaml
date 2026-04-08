@@ -58,6 +58,20 @@ services:
         uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
       "
 
+  sportly-front:
+    image: ghcr.io/teizeee/sportly-front:latest
+    container_name: sportly-front
+    restart: unless-stopped
+    environment:
+      BACKEND_URL: ${BACKEND_URL:-/api/v1/}
+    ports:
+      - "3000:80"
+    depends_on:
+      sportly:
+        condition: service_started
+    networks:
+      - network
+
   # Админка для MySQL
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
