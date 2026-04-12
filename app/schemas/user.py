@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from datetime import date, datetime
 from typing import Optional
 from app.models.user import UserRole
@@ -35,10 +35,12 @@ class TrainerBase(BaseModel):
     gym_id: str = Field(..., min_length=1, max_length=36)
     phone: str = Field(..., min_length=1, max_length=255)
     description: str = Field(..., min_length=1, max_length=255)
+    model_config = ConfigDict(from_attributes=True)
 
 
 class GetUserWithId(UserBase):
     id: str = Field(..., min_length=1, max_length=36)
+    model_config = ConfigDict(from_attributes=True)
 
 class GetUserTrainer(GetUserWithId):
     trainer_profile: Optional[TrainerBase] = None
@@ -84,6 +86,7 @@ class GetUserTrainerWithPassword(GetUserWithId):
 class GetTrainer(TrainerBase):
     user: GetUserWithId = None
     rating: Optional[float] = Field(default=None, ge=1, le=5)
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UsersCount(BaseModel):

@@ -6,10 +6,23 @@ from sqlalchemy.orm import Session
 from app.api import dependencies
 from app.core.database import get_db
 from app.models.user import User
-from app.schemas.booking import BookingAttendanceUpdate, BookingBulkCreateItem, BookingModel
+from app.schemas.booking import BookingAttendanceUpdate, BookingBulkCreateItem, BookingModel, ClientBookingsResponse
 from app.services.booking_service import BookingService
 
 router = APIRouter()
+
+
+@router.get(
+    "/me/bookings",
+    response_model=ClientBookingsResponse,
+    status_code=status.HTTP_200_OK
+)
+async def get_my_bookings(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.require_client)
+):
+    booking_service = BookingService(db)
+    return booking_service.get_my_bookings(current_user)
 
 
 @router.post(

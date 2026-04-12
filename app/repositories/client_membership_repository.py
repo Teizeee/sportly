@@ -28,7 +28,9 @@ class ClientMembershipRepository:
         return client_membership
 
     def get_by_id(self, membership_id: str) -> Optional[ClientMembership]:
-        return self.db.query(ClientMembership).filter(
+        return self.db.query(ClientMembership).options(
+            joinedload(ClientMembership.membership_type)
+        ).filter(
             ClientMembership.id == membership_id
         ).first()
 
@@ -38,7 +40,9 @@ class ClientMembershipRepository:
             (ClientMembership.status == ClientMembershipStatus.PURCHASED, 1),
             else_=2
         )
-        return self.db.query(ClientMembership).filter(
+        return self.db.query(ClientMembership).options(
+            joinedload(ClientMembership.membership_type)
+        ).filter(
             ClientMembership.user_id == user_id
         ).order_by(
             status_order.asc(),
@@ -46,7 +50,9 @@ class ClientMembershipRepository:
         ).all()
 
     def get_active_by_user_id(self, user_id: str) -> Optional[ClientMembership]:
-        return self.db.query(ClientMembership).filter(
+        return self.db.query(ClientMembership).options(
+            joinedload(ClientMembership.membership_type)
+        ).filter(
             ClientMembership.user_id == user_id,
             ClientMembership.status == ClientMembershipStatus.ACTIVE
         ).order_by(

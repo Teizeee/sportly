@@ -6,7 +6,9 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.booking import Booking, BookingStatus, TrainerSlot
+from app.models.gym import Gym
 from app.models.service import UserTrainerPackage
+from app.models.trainer import Trainer
 
 
 class BookingRepository:
@@ -27,6 +29,22 @@ class BookingRepository:
         ).filter(
             Booking.id == booking_id
         ).first()
+
+    def get_client_bookings(self, user_id: str) -> List[Booking]:
+        return self.db.query(Booking).join(
+            TrainerSlot, TrainerSlot.id == Booking.trainer_slot_id
+        ).options(
+            joinedload(Booking.trainer_slot)
+            .joinedload(TrainerSlot.trainer)
+            .joinedload(Trainer.user),
+            joinedload(Booking.trainer_slot)
+            .joinedload(TrainerSlot.trainer)
+            .joinedload(Trainer.gym)
+            .joinedload(Gym.gym_application)
+        ).filter(
+            Booking.user_id == user_id,
+            Booking.status != BookingStatus.CANCELLED
+        ).order_by(TrainerSlot.start_time.asc()).all()
 
     def create_many(self, user_id: str, user_trainer_package_id: str, trainer_slot_ids: List[str]) -> List[Booking]:
         bookings: List[Booking] = []

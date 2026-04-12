@@ -30,7 +30,11 @@ class UserTrainerPackageRepository:
         return user_trainer_package
 
     def get_by_id(self, user_trainer_package_id: str) -> Optional[UserTrainerPackage]:
-        return self.db.query(UserTrainerPackage).filter(
+        return self.db.query(UserTrainerPackage).options(
+            joinedload(UserTrainerPackage.trainer_package)
+            .joinedload(TrainerPackage.trainer)
+            .joinedload(Trainer.user)
+        ).filter(
             UserTrainerPackage.id == user_trainer_package_id
         ).first()
 
@@ -45,7 +49,11 @@ class UserTrainerPackageRepository:
             (UserTrainerPackage.status == UserTrainerPackageStatus.PURCHASED, 1),
             else_=2
         )
-        return self.db.query(UserTrainerPackage).filter(
+        return self.db.query(UserTrainerPackage).options(
+            joinedload(UserTrainerPackage.trainer_package)
+            .joinedload(TrainerPackage.trainer)
+            .joinedload(Trainer.user)
+        ).filter(
             UserTrainerPackage.user_id == user_id
         ).order_by(
             status_order.asc(),
@@ -53,7 +61,11 @@ class UserTrainerPackageRepository:
         ).all()
 
     def get_active_by_user_id(self, user_id: str) -> Optional[UserTrainerPackage]:
-        return self.db.query(UserTrainerPackage).filter(
+        return self.db.query(UserTrainerPackage).options(
+            joinedload(UserTrainerPackage.trainer_package)
+            .joinedload(TrainerPackage.trainer)
+            .joinedload(Trainer.user)
+        ).filter(
             UserTrainerPackage.user_id == user_id,
             UserTrainerPackage.status == UserTrainerPackageStatus.ACTIVE
         ).order_by(

@@ -38,12 +38,21 @@ class ClientMembershipCreate(BaseModel):
     membership_type_id: str = Field(..., min_length=1, max_length=36)
 
 
+class MembershipServiceModel(BaseModel):
+    id: str = Field(..., min_length=1, max_length=36)
+    name: str = Field(..., min_length=1, max_length=255)
+    description: str = Field(..., min_length=1, max_length=255)
+    duration_months: int = Field(..., ge=1)
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ClientMembershipModel(ClientMembershipCreate):
     id: str = Field(..., min_length=1, max_length=36)
     status: ClientMembershipStatus
     purchased_at: date
     activated_at: Optional[date] = None
     expires_at: Optional[date] = None
+    service: MembershipServiceModel = Field(validation_alias="membership_type")
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -52,12 +61,22 @@ class UserTrainerPackageCreate(BaseModel):
     trainer_package_id: str = Field(..., min_length=1, max_length=36)
 
 
+class TrainerPackageServiceModel(BaseModel):
+    id: str = Field(..., min_length=1, max_length=36)
+    name: str = Field(..., min_length=1, max_length=255)
+    description: Optional[str] = Field(None, max_length=255)
+    session_count: int = Field(..., ge=1)
+    trainer: Optional[GetTrainer] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
 class UserTrainerPackageModel(UserTrainerPackageCreate):
     id: str = Field(..., min_length=1, max_length=36)
     status: UserTrainerPackageStatus
     sessions_left: int = Field(..., ge=0)
     purchased_at: date
     activated_at: Optional[date] = None
+    service: TrainerPackageServiceModel = Field(validation_alias="trainer_package")
     model_config = ConfigDict(from_attributes=True)
 
 
