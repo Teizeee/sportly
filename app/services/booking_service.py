@@ -29,6 +29,12 @@ class BookingService:
         self.trainer_slot_repo = TrainerSlotRepository(db)
         self.user_trainer_package_repo = UserTrainerPackageRepository(db)
 
+    @staticmethod
+    def _as_aware_utc(value: datetime) -> datetime:
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc)
+
     def get_my_bookings(self, current_user: User) -> ClientBookingsResponse:
         bookings = self.booking_repo.get_client_bookings(current_user.id)
         now = datetime.now(timezone.utc)
@@ -62,7 +68,8 @@ class BookingService:
             )
 
             is_past_by_status = booking.status in {BookingStatus.VISITED, BookingStatus.NOT_VISITED}
-            is_past_by_time = slot.start_time < now
+            slot_start_time = self._as_aware_utc(slot.start_time)
+            is_past_by_time = slot_start_time < now
 
             if is_past_by_status or is_past_by_time:
                 past.append(item)
@@ -210,7 +217,8 @@ class BookingService:
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Not enough permissions"
                 )
-            if booking.trainer_slot.start_time - datetime.now(timezone.utc) < timedelta(hours=3):
+            slot_start_time = self._as_aware_utc(booking.trainer_slot.start_time)
+            if slot_start_time - datetime.now(timezone.utc) < timedelta(hours=3):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Booking can be cancelled at least 3 hours before training"
