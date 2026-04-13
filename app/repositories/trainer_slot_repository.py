@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from sqlalchemy.orm import Session, joinedload
@@ -63,7 +63,7 @@ class TrainerSlotRepository:
         return slot
 
     def soft_delete(self, slot: TrainerSlot):
-        slot.deleted_at = datetime.utcnow()
+        slot.deleted_at = datetime.now(timezone.utc)
         self.db.commit()
 
     def restore(self, slot: TrainerSlot) -> TrainerSlot:

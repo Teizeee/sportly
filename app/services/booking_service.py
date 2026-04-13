@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import List
 
 from dateutil.relativedelta import relativedelta
@@ -31,7 +31,7 @@ class BookingService:
 
     def get_my_bookings(self, current_user: User) -> ClientBookingsResponse:
         bookings = self.booking_repo.get_client_bookings(current_user.id)
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         upcoming: List[ClientBookingItem] = []
         past: List[ClientBookingItem] = []
@@ -210,7 +210,7 @@ class BookingService:
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Not enough permissions"
                 )
-            if booking.trainer_slot.start_time - datetime.utcnow() < timedelta(hours=3):
+            if booking.trainer_slot.start_time - datetime.now(timezone.utc) < timedelta(hours=3):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Booking can be cancelled at least 3 hours before training"

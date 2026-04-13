@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 
 from sqlalchemy import and_
@@ -61,7 +61,7 @@ class BookingRepository:
         return bookings
 
     def mark_past_created_as_not_visited(self, now: datetime | None = None) -> int:
-        current_time = now or datetime.utcnow()
+        current_time = now or datetime.now(timezone.utc)
         updated = self.db.query(Booking).filter(
             and_(
                 Booking.status == BookingStatus.CREATED,

@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from sqlalchemy.orm import Session, joinedload
@@ -119,9 +119,9 @@ class ReviewRepository:
         ).first()
 
     def soft_delete_gym_review(self, review: GymReview):
-        review.deleted_at = datetime.utcnow()
+        review.deleted_at = datetime.now(timezone.utc)
         self.db.commit()
 
     def soft_delete_trainer_review(self, review: TrainerReview):
-        review.deleted_at = datetime.utcnow()
+        review.deleted_at = datetime.now(timezone.utc)
         self.db.commit()
