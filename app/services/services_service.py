@@ -32,12 +32,12 @@ class ServicesService:
         if not membership_type:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Membership type not found"
+                detail="Тип абонемента не найден"
             )
         if membership_type.gym_id != current_user.gym.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions"
+                detail="Недостаточно прав"
             )
         return self.membership_type_repo.update(membership_type, membership_type_data)
     
@@ -46,12 +46,12 @@ class ServicesService:
         if not membership_type:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Membership type not found"
+                detail="Тип абонемента не найден"
             )
         if membership_type.gym_id != current_user.gym.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions"
+                detail="Недостаточно прав"
             )
         self.membership_type_repo.delete(membership_type)
 
@@ -74,12 +74,12 @@ class ServicesService:
         if not trainer:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Trainer not found"
+                detail="Тренер не найден"
             )
         if trainer.gym_id != current_user.gym.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions"
+                detail="Недостаточно прав"
             )
 
         return self.trainer_package_repo.create(trainer_package_data)
@@ -89,12 +89,12 @@ class ServicesService:
         if not trainer_package: 
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Trainer package not found"
+                detail="Пакет тренера не найден"
             )
         if trainer_package.trainer.gym_id != current_user.gym.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions"
+                detail="Недостаточно прав"
             )
         return self.trainer_package_repo.update(trainer_package, trainer_package_data)
     
@@ -103,11 +103,11 @@ class ServicesService:
         if not trainer_package: 
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Trainer package not found"
+                detail="Пакет тренера не найден"
             )
         if trainer_package.trainer.gym_id != current_user.gym.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions"
+                detail="Недостаточно прав"
             )
         self.trainer_package_repo.delete(trainer_package)

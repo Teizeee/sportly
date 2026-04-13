@@ -22,7 +22,7 @@ class GymPhotoService:
             return self.gym_photo_repo.create(gym_id, f"/gyms/{filename}").link
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
+            detail="Недостаточно прав"
         )
 
     def delete_photo(self, user: User, gym_id: str):
@@ -33,9 +33,9 @@ class GymPhotoService:
                 return
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Photo not found"
+                detail="Фото не найдено"
             )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
+            detail="Недостаточно прав"
         )

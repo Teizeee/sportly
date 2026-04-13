@@ -21,33 +21,33 @@ class GymBlockingService:
         if current_user.id == user_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="You cannot block yourself"
+                detail="Вы не можете заблокировать самого себя"
             )
 
         user_to_block = self.user_repo.get_by_id(user_id)
         if not user_to_block:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                detail="Пользователь не найден"
             )
 
         if user_to_block.role != "CLIENT":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Only CLIENT can be blocked by gym admin"
+                detail="Администратор зала может блокировать только CLIENT"
             )
 
         if not self._user_belongs_to_gym(gym_id, user_to_block):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="User does not belong to this gym"
+                detail="Пользователь не относится к этому залу"
             )
 
         existing_blocking = self.gym_blocking_repo.get_by_gym_and_user_id(gym_id, user_id)
         if existing_blocking:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User is already blocked in this gym"
+                detail="Пользователь уже заблокирован в этом зале"
             )
 
         return self.gym_blocking_repo.create(gym_id, user_id, comment)
@@ -59,7 +59,7 @@ class GymBlockingService:
         if not blocking:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User is not blocked in this gym"
+                detail="Пользователь не заблокирован в этом зале"
             )
 
         self.gym_blocking_repo.delete(blocking)
@@ -68,7 +68,7 @@ class GymBlockingService:
         if not current_user.gym or current_user.gym.id != gym_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions"
+                detail="Недостаточно прав"
             )
 
     def _user_belongs_to_gym(self, gym_id: str, user: User) -> bool:

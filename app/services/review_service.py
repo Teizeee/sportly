@@ -67,13 +67,13 @@ class ReviewService:
         if not gym:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Gym not found"
+                detail="Зал не найден"
             )
 
         if self.review_repo.has_gym_review(current_user.id, payload.gym_id):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Gym review already exists"
+                detail="Отзыв о зале уже существует"
             )
 
         has_active_membership = self.client_membership_repo.has_active_membership_for_gym(
@@ -83,7 +83,7 @@ class ReviewService:
         if not has_active_membership:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only clients with active membership can leave a gym review"
+                detail="Только клиенты с активным абонементом могут оставлять отзыв о зале"
             )
 
         review = self.review_repo.create_gym_review(
@@ -100,13 +100,13 @@ class ReviewService:
         if not trainer:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Trainer not found"
+                detail="Тренер не найден"
             )
 
         if self.review_repo.has_trainer_review(current_user.id, payload.trainer_id):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Trainer review already exists"
+                detail="Отзыв о тренере уже существует"
             )
 
         has_visited = self.booking_repo.has_visited_trainer(
@@ -116,7 +116,7 @@ class ReviewService:
         if not has_visited:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only clients with visited bookings can leave a trainer review"
+                detail="Только клиенты с посещенными бронированиями могут оставлять отзыв о тренере"
             )
 
         review = self.review_repo.create_trainer_review(
@@ -133,7 +133,7 @@ class ReviewService:
         if not gym:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Gym not found"
+                detail="Зал не найден"
             )
         reviews = self.review_repo.get_gym_reviews(gym_id)
         return [self._to_gym_review_model(review) for review in reviews]
@@ -143,7 +143,7 @@ class ReviewService:
         if not trainer:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Trainer not found"
+                detail="Тренер не найден"
             )
         reviews = self.review_repo.get_trainer_reviews(trainer_id)
         return [self._to_trainer_review_model(review) for review in reviews]
@@ -195,7 +195,7 @@ class ReviewService:
         if not review:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Gym review not found"
+                detail="Отзыв о зале не найден"
             )
         self.review_repo.soft_delete_gym_review(review)
 
@@ -204,6 +204,6 @@ class ReviewService:
         if not review:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Trainer review not found"
+                detail="Отзыв о тренере не найден"
             )
         self.review_repo.soft_delete_trainer_review(review)

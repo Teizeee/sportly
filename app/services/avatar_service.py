@@ -26,5 +26,5 @@ class AvatarService:
             return
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Avatar not found"
+            detail="Аватар не найден"
         )

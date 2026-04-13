@@ -19,13 +19,13 @@ class FileService:
         if ext not in settings.allowed_extensions:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"File extension {ext} not allowed. Allowed: {settings.allowed_extensions}"
+                detail=f"Расширение файла {ext} не разрешено. Разрешены: {settings.allowed_extensions}"
             )
         
         if not file.content_type.startswith('image/'):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="File must be an image"
+                detail="Файл должен быть изображением"
             )
     
     async def optimize_image(self, content: bytes, max_size: tuple = (800, 800)) -> bytes:
@@ -54,7 +54,7 @@ class FileService:
         if len(content) > settings.max_file_size:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"File too large. Max size: {settings.max_file_size / 1024 / 1024} MB"
+                detail=f"Файл слишком большой. Максимальный размер: {settings.max_file_size / 1024 / 1024} МБ"
             )
         
         optimized_content = await self.optimize_image(content)

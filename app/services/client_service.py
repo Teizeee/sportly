@@ -45,12 +45,12 @@ class ClientService:
         if not membership_type:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Membership type not found"
+                detail="Тип абонемента не найден"
             )
         if membership_type.gym_id != current_user.gym.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions"
+                detail="Недостаточно прав"
             )
 
         return self.client_membership_repo.create(
@@ -70,12 +70,12 @@ class ClientService:
         if not trainer_package:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Trainer package not found"
+                detail="Пакет тренера не найден"
             )
         if trainer_package.trainer.gym_id != current_user.gym.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions"
+                detail="Недостаточно прав"
             )
 
         return self.user_trainer_package_repo.create(
@@ -105,20 +105,20 @@ class ClientService:
         if not membership or membership.user_id != current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Membership not found"
+                detail="Абонемент не найден"
             )
 
         if membership.status == ClientMembershipStatus.EXPIRED:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Expired membership cannot be activated"
+                detail="Просроченный абонемент нельзя активировать"
             )
 
         active_membership = self.client_membership_repo.get_active_by_user_id(current_user.id)
         if active_membership and active_membership.id != membership.id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User already has an active membership"
+                detail="У пользователя уже есть активный абонемент"
             )
 
         if membership.status == ClientMembershipStatus.ACTIVE:
@@ -134,20 +134,20 @@ class ClientService:
         if not user_trainer_package or user_trainer_package.user_id != current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Trainer package not found"
+                detail="Пакет тренера не найден"
             )
 
         if user_trainer_package.status == UserTrainerPackageStatus.FINISHED:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Finished trainer package cannot be activated"
+                detail="Завершенный пакет тренера нельзя активировать"
             )
 
         active_package = self.user_trainer_package_repo.get_active_by_user_id(current_user.id)
         if active_package and active_package.id != user_trainer_package.id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User already has an active trainer package"
+                detail="У пользователя уже есть активный пакет тренера"
             )
 
         if user_trainer_package.status == UserTrainerPackageStatus.ACTIVE:
@@ -163,12 +163,12 @@ class ClientService:
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                detail="Пользователь не найден"
             )
         if user.role != "CLIENT":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Only CLIENT can be assigned to services"
+                detail="Назначать услуги можно только пользователю с ролью CLIENT"
             )
         return user
 
@@ -177,5 +177,5 @@ class ClientService:
         if not current_user.gym:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Gym admin has no approved gym"
+                detail="У администратора зала нет одобренного зала"
             )

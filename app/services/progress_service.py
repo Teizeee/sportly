@@ -39,7 +39,7 @@ class ProgressService:
         if current_user.role != "CLIENT":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Operation is allowed only for CLIENT"
+                detail="Операция разрешена только для CLIENT"
             )
 
     @staticmethod

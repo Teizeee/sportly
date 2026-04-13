@@ -28,7 +28,7 @@ class SubscriptionService:
             return sub
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Platform subscription not found"
+            detail="Подписка платформы не найдена"
         )
 
     def get_platform_subscription_text(self) -> SubscriptionText:

@@ -56,7 +56,7 @@ class TrainerSlotService:
         if existing_any and existing_any.deleted_at is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Slot already exists"
+                detail="Слот уже существует"
             )
         if existing_any and existing_any.deleted_at is not None:
             restored_slot = self.trainer_slot_repo.restore(existing_any)
@@ -73,7 +73,7 @@ class TrainerSlotService:
         if not slot or slot.trainer_id != trainer_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Slot not found"
+                detail="Слот не найден"
             )
         self._ensure_slot_not_booked(slot)
         self.trainer_slot_repo.soft_delete(slot)
@@ -117,7 +117,7 @@ class TrainerSlotService:
         if not trainer:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Trainer not found"
+                detail="Тренер не найден"
             )
         return trainer
 
@@ -127,7 +127,7 @@ class TrainerSlotService:
             if not current_user.trainer_profile or current_user.trainer_profile.id != trainer.id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Not enough permissions"
+                    detail="Недостаточно прав"
                 )
             return
 
@@ -135,13 +135,13 @@ class TrainerSlotService:
             if not current_user.gym or current_user.gym.id != trainer.gym_id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Not enough permissions"
+                    detail="Недостаточно прав"
                 )
             return
 
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
+            detail="Недостаточно прав"
         )
 
     @staticmethod
@@ -149,27 +149,27 @@ class TrainerSlotService:
         if start_time >= end_time:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="start_time must be before end_time"
+                detail="start_time должен быть раньше end_time"
             )
         if start_time.minute != 0 or start_time.second != 0 or start_time.microsecond != 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="start_time must be on the hour"
+                detail="start_time должен быть ровно на начале часа"
             )
         if end_time.minute != 0 or end_time.second != 0 or end_time.microsecond != 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="end_time must be on the hour"
+                detail="end_time должен быть ровно на начале часа"
             )
         if end_time - start_time != timedelta(hours=1):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Slot duration must be exactly 1 hour"
+                detail="Длительность слота должна быть ровно 1 час"
             )
         if start_time.date() != end_time.date():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Slot must be within one day"
+                detail="Слот должен быть в пределах одного дня"
             )
 
     def _validate_slot_in_schedule(self, trainer: Trainer, start_time: datetime, end_time: datetime):
@@ -177,7 +177,7 @@ class TrainerSlotService:
         if start_time.time() < schedule.open_time or end_time.time() > schedule.close_time:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Slot is out of gym schedule"
+                detail="Слот выходит за рамки расписания зала"
             )
 
     def _build_day_intervals(self, trainer: Trainer, slot_date: date) -> List[tuple[datetime, datetime]]:
@@ -196,7 +196,7 @@ class TrainerSlotService:
         if slot.booking and slot.booking.status != BookingStatus.CANCELLED:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot delete booked slot"
+                detail="Нельзя удалить забронированный слот"
             )
 
     @staticmethod
@@ -241,5 +241,5 @@ class TrainerSlotService:
                 return schedule
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Gym schedule for this day is not configured"
+            detail="Расписание зала на этот день не настроено"
         )

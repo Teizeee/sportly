@@ -33,7 +33,7 @@ class GymService:
             if application.status == "APPROVED":
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Gym application already approved"
+                    detail="Заявка на зал уже одобрена"
                 )
             self.gym_application_repo.approve(application)
             gym = self.gym_repo.create(application.id)
@@ -41,7 +41,7 @@ class GymService:
             return gym
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Gym application not found"
+            detail="Заявка на зал не найдена"
         )
 
     def reject_application(self, application_id: str, reject_application_data: RejectGymApplication) -> GymApplication:
@@ -50,7 +50,7 @@ class GymService:
             return self.gym_application_repo.reject(application, reject_application_data.comment)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Gym application not found"
+            detail="Заявка на зал не найдена"
         )
     
 
@@ -79,7 +79,7 @@ class GymService:
         if not gym:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Gym not found"
+                detail="Зал не найден"
             )
         self.gym_application_repo.update(gym.gym_application, update_gym_data)
         self.gym_repo.update_schedule(gym, update_gym_data.schedule)
@@ -92,7 +92,7 @@ class GymService:
         if not gym:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Gym not found"
+                detail="Зал не найден"
             )
         return self.gym_repo.block(gym, comment)
     
@@ -101,6 +101,6 @@ class GymService:
         if not gym:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Gym not found"
+                detail="Зал не найден"
             )
         return self.gym_repo.unblock(gym)

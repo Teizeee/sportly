@@ -34,25 +34,25 @@ class AuthService:
         if normalized_subsystem not in {"web", "mobile"}:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Invalid Subsystem header. Allowed values: "web" or "mobile"'
+                detail='Некорректный заголовок Subsystem. Допустимые значения: "web" или "mobile"'
             )
 
         if normalized_subsystem == "web" and user_data.role == UserRole.CLIENT:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Client registration is not allowed from web subsystem"
+                detail="Регистрация клиента из подсистемы web запрещена"
             )
 
         existing_user = self.user_repo.get_by_email(user_data.email)
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User with this email already exists"
+                detail="Пользователь с таким email уже существует"
             )
         if user_data.role == "SUPER_ADMIN":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="User can not register as SUPER_ADMIN by himself"
+                detail="Пользователь не может самостоятельно зарегистрироваться как SUPER_ADMIN"
             )
         if user_data.role == "TRAINER":
             if current_user is not None and current_user.role == "GYM_ADMIN":
@@ -60,7 +60,7 @@ class AuthService:
             else:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="User can only be registered as TRAINER by gym admin"
+                    detail="Пользователь может быть зарегистрирован как TRAINER только администратором зала"
                 )
             
 
@@ -75,44 +75,44 @@ class AuthService:
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password"
+                detail="Неверный email или пароль"
             )
 
         if user.is_deleted:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Account has been deleted"
+                detail="Аккаунт удален"
             )
 
         if user.is_blocked:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Account is blocked. Reason: {user.blocked_comment or 'No reason provided'}"
+                detail=f"Аккаунт заблокирован. Причина: {user.blocked_comment or 'Причина не указана'}"
             )
 
         if not verify_password(login_data.password, user.password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password"
+                detail="Неверный email или пароль"
             )
 
         normalized_subsystem = subsystem.lower()
         if normalized_subsystem not in {"web", "mobile"}:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Invalid Subsystem header. Allowed values: "web" or "mobile"'
+                detail='Некорректный заголовок Subsystem. Допустимые значения: "web" или "mobile"'
             )
 
         if normalized_subsystem == "web" and user.role not in {UserRole.SUPER_ADMIN, UserRole.GYM_ADMIN}:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Web login is allowed only for SUPER_ADMIN and GYM_ADMIN"
+                detail="Вход через web разрешен только для SUPER_ADMIN и GYM_ADMIN"
             )
 
         if normalized_subsystem == "mobile" and user.role not in {UserRole.CLIENT, UserRole.TRAINER}:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Mobile login is allowed only for CLIENT and TRAINER"
+                detail="Вход через mobile разрешен только для CLIENT и TRAINER"
             )
 
         access_token = create_access_token(
@@ -132,13 +132,13 @@ class AuthService:
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                detail="Пользователь не найден"
             )
 
         if user.is_deleted:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Account has been deleted"
+                detail="Аккаунт удален"
             )
 
         return user
@@ -154,7 +154,7 @@ class AuthService:
             if current_user.gym.id != gym_id or role in ["GYM_ADMIN", "SUPER_ADMIN"]:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Not enough permissions"
+                    detail="Недостаточно прав"
                 )
 
         users = self.user_repo.get_all(
@@ -201,7 +201,7 @@ class AuthService:
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                detail="Пользователь не найден"
             )
 
         if update_data.email is not None:
@@ -209,7 +209,7 @@ class AuthService:
             if existing_user and existing_user.id != user_id:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Email already in use"
+                    detail="Электронная почта уже используется"
                 )
 
         return self.user_repo.update(user, update_data)
@@ -219,7 +219,7 @@ class AuthService:
         if not target_user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                detail="Пользователь не найден"
             )
 
         if current_user.role == UserRole.GYM_ADMIN:
@@ -231,7 +231,7 @@ class AuthService:
             ):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Not enough permissions"
+                    detail="Недостаточно прав"
                 )
 
         return self.update_profile(target_user_id, update_data)
@@ -242,7 +242,7 @@ class AuthService:
         if not verify_password(password_data.current_password, user.password):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Current password is incorrect"
+                detail="Текущий пароль неверный"
             )
 
         hashed_password = get_password_hash(password_data.new_password)
@@ -254,14 +254,14 @@ class AuthService:
         if admin_id == target_user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot block a super admin"
+                detail="Нельзя заблокировать супер-админа"
             )
 
         target_user = self.user_repo.get_by_id(target_user_id)
         if not target_user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                detail="Пользователь не найден"
             )
 
         return self.user_repo.block(target_user, block_data)
@@ -271,7 +271,7 @@ class AuthService:
         if not target_user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                detail="Пользователь не найден"
             )
 
         return self.user_repo.unblock(target_user)
@@ -282,14 +282,14 @@ class AuthService:
         if user_id == target_user_id and current_user.role == "SUPER_ADMIN":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot delete a super admin"
+                detail="Нельзя удалить супер-админа"
             )
 
         target_user = self.user_repo.get_by_id(target_user_id)
         if not target_user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                detail="Пользователь не найден"
             )
 
         if current_user.role == "GYM_ADMIN" and target_user.role == "TRAINER" and target_user.trainer_profile.gym_id == current_user.gym.id:
@@ -299,7 +299,7 @@ class AuthService:
         if user_id != target_user_id and current_user.role != "SUPER_ADMIN":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions to delete other users"
+                detail="Недостаточно прав для удаления других пользователей"
             )
 
         self.user_repo.delete(target_user)

@@ -19,7 +19,7 @@ async def get_current_user(
 ) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail="Не удалось проверить учетные данные",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
@@ -46,7 +46,7 @@ async def get_current_active_user(
     if current_user.is_blocked:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"User is blocked. Reason: {current_user.blocked_comment or 'No reason provided'}"
+            detail=f"Пользователь заблокирован. Причина: {current_user.blocked_comment or 'Причина не указана'}"
         )
 
     return current_user
@@ -90,7 +90,7 @@ def require_roles(allowed_roles: list[UserRole]):
         if current_user.role not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Operation requires one of these roles: {[r.value for r in allowed_roles]}"
+                detail=f"Операция требует одну из следующих ролей: {[r.value for r in allowed_roles]}"
             )
         return current_user
 

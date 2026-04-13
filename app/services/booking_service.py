@@ -85,7 +85,7 @@ class BookingService:
         if not payload:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="At least one booking item is required"
+                detail="Требуется как минимум один элемент бронирования"
             )
 
         self.user_trainer_package_repo.finish_expired_active_packages_for_user(current_user.id)
@@ -94,26 +94,26 @@ class BookingService:
         if not active_package:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Active trainer package not found"
+                detail="Активный пакет тренера не найден"
             )
 
         if active_package.activated_at is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Active trainer package is not activated"
+                detail="Активный пакет тренера не активирован"
             )
 
         slot_ids = [item.trainer_slot_id for item in payload]
         if len(set(slot_ids)) != len(slot_ids):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Duplicate trainer_slot_id in request"
+                detail="В запросе дублируется trainer_slot_id"
             )
 
         if active_package.sessions_left < len(slot_ids):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Not enough sessions_left in active trainer package"
+                detail="Недостаточно sessions_left в активном пакете тренера"
             )
 
         slots = self.trainer_slot_repo.get_by_ids(slot_ids)
@@ -122,7 +122,7 @@ class BookingService:
         if missing_slot_ids:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Slots not found: {', '.join(missing_slot_ids)}"
+                detail=f"Слоты не найдены: {', '.join(missing_slot_ids)}"
             )
 
         existing_bookings = self.booking_repo.get_by_trainer_slot_ids(slot_ids)
@@ -133,7 +133,7 @@ class BookingService:
             booked_slot_ids = ", ".join(sorted({booking.trainer_slot_id for booking in active_existing_bookings}))
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Slots already booked: {booked_slot_ids}"
+                detail=f"Слоты уже забронированы: {booked_slot_ids}"
             )
         cancelled_booking_by_slot_id = {
             booking.trainer_slot_id: booking
@@ -153,17 +153,17 @@ class BookingService:
             if slot.trainer_id != package_trainer_id:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Slot {slot.id} belongs to another trainer"
+                    detail=f"Слот {slot.id} принадлежит другому тренеру"
                 )
             if slot_date < today:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Slot {slot.id} is in the past"
+                    detail=f"Слот {slot.id} находится в прошлом"
                 )
             if slot_date < activated_at or slot_date > expires_at:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Slot {slot.id} is out of package active period"
+                    detail=f"Слот {slot.id} вне периода действия пакета"
                 )
 
         slot_ids_to_create = [slot_id for slot_id in slot_ids if slot_id not in cancelled_booking_by_slot_id]
@@ -190,7 +190,7 @@ class BookingService:
             self.db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Failed to create bookings due to concurrent update. Try again."
+                detail="Не удалось создать бронирования из-за конкурентного обновления. Попробуйте снова."
             )
 
         for booking in bookings:
@@ -202,49 +202,49 @@ class BookingService:
         if not booking:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Booking not found"
+                detail="Бронирование не найдено"
             )
 
         if booking.status != BookingStatus.CREATED:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Only CREATED bookings can be cancelled"
+                detail="Отменять можно только бронирования со статусом CREATED"
             )
 
         if current_user.role == UserRole.CLIENT:
             if booking.user_id != current_user.id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Not enough permissions"
+                    detail="Недостаточно прав"
                 )
             slot_start_time = self._as_aware_utc(booking.trainer_slot.start_time)
             if slot_start_time - datetime.now(timezone.utc) < timedelta(hours=3):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Booking can be cancelled at least 3 hours before training"
+                    detail="Бронирование можно отменить минимум за 3 часа до тренировки"
                 )
         elif current_user.role == UserRole.GYM_ADMIN:
             if not current_user.gym:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Gym admin has no approved gym"
+                    detail="У администратора зала нет одобренного зала"
                 )
             if booking.trainer_slot.trainer.gym_id != current_user.gym.id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Not enough permissions"
+                    detail="Недостаточно прав"
                 )
         else:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions"
+                detail="Недостаточно прав"
             )
 
         user_package = self.user_trainer_package_repo.get_by_id_for_update(booking.user_trainer_package_id)
         if not user_package:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User trainer package not found"
+                detail="Пакет тренера пользователя не найден"
             )
 
         booking.status = BookingStatus.CANCELLED
@@ -269,24 +269,24 @@ class BookingService:
         if current_user.role != UserRole.GYM_ADMIN:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions"
+                detail="Недостаточно прав"
             )
         if not current_user.gym:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Gym admin has no approved gym"
+                detail="У администратора зала нет одобренного зала"
             )
 
         booking = self.booking_repo.get_by_id(booking_id)
         if not booking:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Booking not found"
+                detail="Бронирование не найдено"
             )
         if booking.trainer_slot.trainer.gym_id != current_user.gym.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions"
+                detail="Недостаточно прав"
             )
         can_update = (
             booking.status == BookingStatus.CREATED
@@ -295,7 +295,7 @@ class BookingService:
         if not can_update:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Only CREATED bookings can be marked, or NOT_VISITED can be changed to VISITED"
+                detail="Отмечать можно только бронирования CREATED, либо менять NOT_VISITED на VISITED"
             )
 
         booking.status = payload.status
