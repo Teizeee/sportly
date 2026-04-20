@@ -43,6 +43,12 @@ class AuthService:
                 detail="Регистрация клиента из подсистемы web запрещена"
             )
 
+        if normalized_subsystem == "mobile" and user_data.role == UserRole.GYM_ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Регистрация администратора зала из подсистемы mobile запрещена"
+            )
+
         existing_user = self.user_repo.get_by_email(user_data.email)
         if existing_user:
             raise HTTPException(
